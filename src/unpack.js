@@ -1,6 +1,7 @@
 const path = require('path');
 const fs = require('fs');
 const chalk = require('chalk');
+const { globalLog } = require('./logger');
 const { globalError } = require('./logger');
 const { SourceMapConsumer } = require('source-map');
 const { createLogger } = require('./logger');
@@ -20,14 +21,13 @@ const fixSource = (source) => {
 const unpack = async (sourceMapPath, outputDir, flags, input) => {
   const sourceMap = await fs.promises.readFile(sourceMapPath, 'utf-8');
 
-  console.log();
-  console.log('URL:');
-  console.log('  ', chalk.yellow.bold(input));
-  console.log();
-  console.log('Output Directory:')
-  console.log('  ', chalk.yellow.bold(outputDir))
-  console.log();
-  console.log('Files unpacked:');
+  globalLog();
+  globalLog('URL:');
+  globalLog('  ', chalk.yellow.bold(input));
+  globalLog();
+  globalLog('Output Directory:')
+  globalLog('  ', chalk.yellow.bold(outputDir))
+  globalLog();
 
   try {
     log(`Start unpacking SourceMap "${sourceMapPath}" (${sourceMap.length} bytes)`)
@@ -50,7 +50,7 @@ const unpack = async (sourceMapPath, outputDir, flags, input) => {
 
         const outputString = `${filePath.replace(path.resolve(outputDir), '')}`;
 
-        console.log(
+        globalLog(
           chalk.grey(` @`),
           chalk.whiteBright(
             `${outputString.split('/').slice(0, -1).join('/')}/`

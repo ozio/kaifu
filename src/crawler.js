@@ -2,8 +2,8 @@ const path = require('path');
 const { URL } = require('url');
 const fs = require('fs');
 const chalk = require('chalk');
-const fetch = require('node-fetch');
 const EventEmitter = require('events');
+const { client } = require('./client');
 const { getAllSourceMapsFromText } = require('./utils/getAllSourceMapsFromText');
 const { resolveURL } = require('./utils/resolveURL');
 const { getAllResourcesFromHTML } = require('./utils/getAllResourcesFromHTML');
@@ -24,7 +24,7 @@ class Queue {
 
     if (!this.queue.includes(record)) {
       this.queue.push(record);
-      radio.emit('new-record')
+      radio.emit('new-record');
     }
   }
 
@@ -76,7 +76,14 @@ const downloadAndProcess = async (record) => {
 
   if (inputType === 'remote-sourcemap') {
     log('Creating request ...');
-    const response = await fetch(input);
+    let response;
+
+    try {
+      response = await client(input);
+    } catch (e) {
+      return;
+    }
+
     log('Done! Parsing response ...');
     const text = await response.text();
     log('Done! Generating filename ...');
@@ -104,7 +111,14 @@ const downloadAndProcess = async (record) => {
 
   if (inputType === 'remote-html') {
     log('Creating request ...');
-    const response = await fetch(input);
+    let response;
+
+    try {
+      response = await client(input);
+    } catch (e) {
+      return;
+    }
+
     const html = await response.text();
     const resources = await getAllResourcesFromHTML(html);
     const sourceMaps = getAllSourceMapsFromText(html);
@@ -126,7 +140,14 @@ const downloadAndProcess = async (record) => {
 
   if (inputType === 'remote-resource') {
     log('Creating request ...');
-    const response = await fetch(input);
+    let response;
+
+    try {
+      response = await client(input);
+    } catch (e) {
+      return;
+    }
+
     const html = await response.text();
     const sourceMaps = getAllSourceMapsFromText(html);
 

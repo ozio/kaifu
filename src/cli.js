@@ -1,5 +1,6 @@
 const chalk = require('chalk');
 const meow = require('meow');
+const { globalLog } = require('./logger');
 const { logo } = require('./utils/logo');
 const { createLogger, loggerConfig } = require('./logger');
 const { log } = createLogger(chalk.gray('cli'));
@@ -52,7 +53,7 @@ loggerConfig.verbose = cli.flags.verbose;
 const { runner } = require('./runner');
 
 (async () => {
-  console.log(`\n${logo}\n`);
+  globalLog(`\n${logo}\n`);
 
   log('Initialized with following params:');
 
@@ -64,7 +65,7 @@ const { runner } = require('./runner');
   log('With following inputs:');
 
   for (const input of cli.input) {
-    log(`   "${input}"`);
+    log(`   ${chalk.yellow(input)}`);
   }
 
   log();

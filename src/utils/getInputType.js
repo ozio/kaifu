@@ -1,23 +1,28 @@
 const { URL } = require('url');
 const fs = require('fs');
 const path = require('path');
+const { globalLog } = require('../logger');
 const { getFirstLine } = require('./getFirstLine');
 
 const getInputType = async (input) => {
   try {
     const url = new URL(input);
 
-    if (!['http:', 'https:'].includes(url.protocol)) {
-      console.log(`Input '${input}' using unsupported protocol: '${url.protocol}'`)
+    const { protocol, pathname } = url;
+
+    if (!['http:', 'https:'].includes(protocol)) {
+      globalLog(`Input '${input}' using unsupported protocol: '${protocol}'`)
     }
 
-    if (url.pathname.endsWith('.map')) {
+    if (pathname.endsWith('.map')) {
       return 'remote-sourcemap';
     }
 
-    if (url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    if (pathname.endsWith('.js') || pathname.endsWith('.css')) {
       return 'remote-resource';
     }
+
+    // if (pathname.endsWith('.png') || pathname.endsWith('')) {}
 
     return 'remote-html';
   } catch (e) {}
