@@ -14,10 +14,12 @@ const radio = new EventEmitter();
 const { log } = createLogger(chalk.blue('crawler'));
 
 class Queue {
-  locked = false;
-  queue = [];
+  constructor() {
+    this.locked = false;
+    this.queue = [];
+  }
 
-  add = (record) => {
+  add(record) {
     log('New record in queue', record);
 
     if (!this.queue.includes(record)) {
@@ -26,13 +28,13 @@ class Queue {
     }
   }
 
-  rollback = (record) => {
+  rollback(record) {
     log('Return record to queue', record);
 
     this.queue.unshift(record);
   }
 
-  next = () => {
+  next() {
     log('Next record requested');
 
     if (this.queue.length === 0) {

@@ -2,6 +2,7 @@ const chalk = require('chalk');
 const meow = require('meow');
 const { createLogger, loggerConfig } = require('./logger');
 const { log } = createLogger(chalk.gray('cli'));
+
 const cli = meow(
 `
 █▄▀ ▄▀█ █ █▀▀ █░█
@@ -9,7 +10,6 @@ const cli = meow(
 
 Usage: kaifu [options...] <url|file|directory>
    -o,  --output-dir <dir>   Output directory.
-   -z,  --zip <file>         Put unpacked sources to zip-archive.
    -w,  --overwrite          Overwrite files if already exist.
    -s,  --skip-empty         Don't create a file if sourcemap is empty.
    -l,  --list <file>        Use a list of several inputs.
@@ -26,12 +26,6 @@ Examples:
         alias: 'o',
       },
 
-      /*TODO*/
-      zip: {
-        type: 'string',
-        alias: 'z',
-      },
-
       overwrite: {
         type: 'boolean',
         alias: 'w',
@@ -44,7 +38,7 @@ Examples:
 
       list: {
         type: 'string',
-        alias: 'l'
+        alias: 'l',
       },
 
       verbose: {
@@ -74,21 +68,21 @@ const { runner } = require('./runner');
   log('With following inputs:');
 
   for (const input of cli.input) {
-    log(`   "${input}"`)
+    log(`   "${input}"`);
   }
 
   log();
 
   if (cli.input.length === 0) {
-    console.error(chalk.red('Error: No input sources were defined'))
+    console.error(chalk.red('Error: No input sources were defined'));
     process.exitCode = 1;
 
     return;
   }
 
   for (const input of cli.input) {
-    log('Runner started with input', input)
+    log('Runner started with input', input);
     await runner(input, cli.flags);
-    log('Runner ended with input', input)
+    log('Runner ended with input', input);
   }
 })();
