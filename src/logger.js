@@ -2,6 +2,7 @@ const chalk = require('chalk');
 
 const loggerConfig = {
   verbose: false,
+  silent: false,
 }
 
 const log = (...messages) => {
@@ -22,7 +23,25 @@ const warn = (...messages) => {
   console.log(`[${chalk.yellow.bold('kaifu')}]`, ...messages);
 };
 
-const createLogger = (module) => {
+const globalLog = (...messages) => {
+  if (loggerConfig.silent) return;
+
+  console.log(...messages);
+};
+
+const globalError = (...messages) => {
+  if (loggerConfig.silent) return;
+
+  console.error(chalk.red.bold('Error:'), ...messages);
+};
+
+const globalWarning = (...messages) => {
+  if (loggerConfig.silent) return;
+
+  console.warn(chalk.yellow.bold('Warning:'),...messages);
+};
+
+const createLogger = (module, verboseOnly = false) => {
   return {
     log: (...messages) => log(`[${module}]`, ...messages),
     err: (...messages) => err(`[${module}]`, ...messages),
@@ -30,4 +49,4 @@ const createLogger = (module) => {
   };
 };
 
-module.exports = { loggerConfig, createLogger, log, err, warn };
+module.exports = { loggerConfig, createLogger, globalLog, globalError, globalWarning, log, err, warn };

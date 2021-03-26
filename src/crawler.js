@@ -20,7 +20,7 @@ class Queue {
   }
 
   add(record) {
-    log('New record in queue', record);
+    log('New record in the queue', record);
 
     if (!this.queue.includes(record)) {
       this.queue.push(record);
@@ -29,7 +29,7 @@ class Queue {
   }
 
   rollback(record) {
-    log('Return record to queue', record);
+    log('Return record to the queue', record);
 
     this.queue.unshift(record);
   }
@@ -38,7 +38,7 @@ class Queue {
     log('Next record requested');
 
     if (this.queue.length === 0) {
-      log('Records queue has finished');
+      log('Records queue has ended');
     }
 
     return this.queue.shift();
@@ -98,7 +98,7 @@ const downloadAndProcess = async (record) => {
     await fs.promises.writeFile(path.resolve(outputDir, filename), text, 'utf-8');
     log('File saved');
 
-    await unpack(path.resolve(outputDir, filename), outputDir, currentFlags);
+    await unpack(path.resolve(outputDir, filename), outputDir, currentFlags, input);
     await fs.promises.unlink(path.resolve(outputDir, filename));
   }
 

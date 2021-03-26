@@ -1,12 +1,11 @@
 const chalk = require('chalk');
 const meow = require('meow');
+const { logo } = require('./utils/logo');
 const { createLogger, loggerConfig } = require('./logger');
 const { log } = createLogger(chalk.gray('cli'));
 
 const cli = meow(
-`
-█▄▀ ▄▀█ █ █▀▀ █░█
-█░█ █▀█ █ █▀░ █▄█
+`${logo}
 
 Usage: kaifu [options...] <url|file|directory>
    -o,  --output-dir <dir>   Output directory.
@@ -53,10 +52,7 @@ loggerConfig.verbose = cli.flags.verbose;
 const { runner } = require('./runner');
 
 (async () => {
-  console.log(`
-█▄▀ ▄▀█ █ █▀▀ █░█
-█░█ █▀█ █ █▀░ █▄█
-`);
+  console.log(`\n${logo}\n`);
 
   log('Initialized with following params:');
 
