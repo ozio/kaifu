@@ -1,30 +1,36 @@
 const { URL } = require('url');
 const fs = require('fs');
 const path = require('path');
-const { globalLog } = require('../logger');
+const { globalError } = require('../logger');
 const { getFirstLine } = require('./getFirstLine');
+
+const getInputURLType = (input) => {
+  const url = new URL(input);
+
+  const { protocol, pathname } = url;
+
+  if (!['http:', 'https:'].includes(protocol)) {
+    return 'skip';
+  }
+
+  if (pathname.endsWith('.map')) {
+    return 'remote-sourcemap';
+  }
+
+  if (pathname.endsWith('.js') || pathname.endsWith('.css')) {
+    return 'remote-resource';
+  }
+
+  if (pathname.endsWith('.png') || pathname.endsWith('.jpg') || pathname.endsWith('.ico')) {
+    return 'skip';
+  }
+
+  return 'remote-html';
+};
 
 const getInputType = async (input) => {
   try {
-    const url = new URL(input);
-
-    const { protocol, pathname } = url;
-
-    if (!['http:', 'https:'].includes(protocol)) {
-      globalLog(`Input '${input}' using unsupported protocol: '${protocol}'`)
-    }
-
-    if (pathname.endsWith('.map')) {
-      return 'remote-sourcemap';
-    }
-
-    if (pathname.endsWith('.js') || pathname.endsWith('.css')) {
-      return 'remote-resource';
-    }
-
-    // if (pathname.endsWith('.png') || pathname.endsWith('')) {}
-
-    return 'remote-html';
+    return getInputURLType(input);
   } catch (e) {}
 
   try {
@@ -54,8 +60,9 @@ const getInputType = async (input) => {
       }
     }
   } catch (e) {
+    globalError('Invalid input');
     throw e;
   }
 };
 
-module.exports = { getInputType };
+module.exports = { getInputType, getInputURLType };

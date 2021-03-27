@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const chalk = require('chalk');
+const { stats } = require('./stats');
 const { createLogger } = require('./logger');
 const { crawler } = require('./crawler');
 const { generateOutputDirName } = require('./utils/generateOutputDirName');
@@ -11,6 +12,8 @@ const { log } = createLogger(chalk.yellow('runner'))
 const runner = async (input, flags) => {
   const inputType = await getInputType(input);
   const outputDir = path.resolve(flags.outputDir || generateOutputDirName(input, inputType));
+
+  stats.outputDirectories[outputDir] = true;
 
   log();
   log('Input type detected:', inputType);

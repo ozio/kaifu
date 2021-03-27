@@ -2,29 +2,39 @@ const path = require('path');
 const { URL } = require('url');
 const fs = require('fs');
 const chalk = require('chalk');
-const EventEmitter = require('events');
+const { stats } = require('./stats');
+const { globalLog, createLogger } = require('./logger');
+const { unboxQueue } = require('./unpack');
+const { getInputURLType } = require('./utils/getInputType');
+const { eventEmitter } = require('./eventemitter');
 const { client } = require('./client');
 const { getAllSourceMapsFromText } = require('./utils/getAllSourceMapsFromText');
 const { resolveURL } = require('./utils/resolveURL');
 const { getAllResourcesFromHTML } = require('./utils/getAllResourcesFromHTML');
-const { unpack } = require('./unpack');
 const { generateRandomString } = require('./utils/generateRandomString');
-const { createLogger } = require('./logger');
-const radio = new EventEmitter();
 const { log } = createLogger(chalk.blue('crawler'));
 
-class Queue {
+class DownloadQueue {
   constructor() {
     this.locked = false;
     this.queue = [];
+    this.cache = {};
   }
 
   add(record) {
     log('New record in the queue', record);
 
-    if (!this.queue.includes(record)) {
+    if (record.inputType === 'skip') {
+      log('File skipped for some reason:', record.inputType, record.input)
+      return;
+    }
+
+    if (this.cache[record.input]) return;
+    this.cache[record.input] = true;
+
+    if (!this.queue.some(r => r.input === record.input)) {
       this.queue.push(record);
-      radio.emit('new-record');
+      eventEmitter.emit('new-crawler-record');
     }
   }
 
@@ -37,22 +47,22 @@ class Queue {
   next() {
     log('Next record requested');
 
-    if (this.queue.length === 0) {
-      log('Records queue has ended');
-    }
-
     return this.queue.shift();
   }
 }
 
-const queue = new Queue();
+const downloadQueue = new DownloadQueue();
 
 let currentFlags;
 
 const downloadNextFile = async () => {
-  const nextFileRecord = queue.next();
+  const nextFileRecord = downloadQueue.next();
 
-  if (!nextFileRecord) return;
+  if (!nextFileRecord) {
+    log('Records queue has ended');
+    eventEmitter.emit('crawler-queue-is-empty');
+    return;
+  }
 
   return await downloadAndProcess(nextFileRecord)
 }
@@ -60,33 +70,44 @@ const downloadNextFile = async () => {
 const downloadAndProcess = async (record) => {
   const { input, inputType, outputDir } = record;
 
-  log('Is downloading locked now?', queue.locked);
+  log('Is downloading locked now?', downloadQueue.locked);
 
-  if (queue.locked) {
-    queue.rollback(record);
+  if (downloadQueue.locked) {
+    downloadQueue.rollback(record);
 
     return;
   }
 
   log(`Starting download resource "${input} with type "${inputType}"`);
 
-  queue.locked = true;
+  downloadQueue.locked = true;
 
   const url = new URL(input);
 
-  if (inputType === 'remote-sourcemap') {
-    log('Creating request ...');
-    let response;
+  let response;
 
-    try {
-      response = await client(input);
-    } catch (e) {
-      return;
+  try {
+    log('Making request ...');
+    const isSourceMap = input.endsWith('.map');
+
+    if (isSourceMap) {
+      globalLog(chalk.bold(` ▸ ${url}`));
+      stats.sourceMapsFound++;
+    } else {
+      !currentFlags.short && globalLog(chalk.gray(` ▸ ${url}`));
+      stats.resourcesDownloaded++;
     }
 
-    log('Done! Parsing response ...');
+    response = await client(input);
+  } catch (e) {
+    globalLog(chalk.red(` ▸ ${e.message}`));
+    return;
+  }
+
+  if (inputType === 'remote-sourcemap') {
+    log('Parsing response ...');
     const text = await response.text();
-    log('Done! Generating filename ...');
+    log('Generating filename ...');
     let filename = `sourcemap.${generateRandomString()}.map`;
 
     try {
@@ -105,49 +126,37 @@ const downloadAndProcess = async (record) => {
     await fs.promises.writeFile(path.resolve(outputDir, filename), text, 'utf-8');
     log('File saved');
 
-    await unpack(path.resolve(outputDir, filename), outputDir, currentFlags, input);
-    await fs.promises.unlink(path.resolve(outputDir, filename));
+    unboxQueue.add({
+      filePath: path.resolve(outputDir, filename),
+      flags: currentFlags,
+      outputDir,
+      input,
+    });
   }
 
   if (inputType === 'remote-html') {
-    log('Creating request ...');
-    let response;
-
-    try {
-      response = await client(input);
-    } catch (e) {
-      return;
-    }
-
     const html = await response.text();
     const resources = await getAllResourcesFromHTML(html);
     const sourceMaps = getAllSourceMapsFromText(html);
 
     resources.forEach(resource => {
       const newInput = resolveURL(input, resource);
-      const inputType = 'remote-resource';
+      const inputType = getInputURLType(newInput);
 
-      queue.add({ input: newInput, inputType, outputDir });
+      if (newInput.startsWith('http:') || newInput.startsWith('https:')) {
+        downloadQueue.add({ input: newInput, inputType, outputDir });
+      }
     });
 
     sourceMaps.forEach(sourceMap => {
       const newInput = resolveURL(input, sourceMap);
       const inputType = 'remote-sourcemap';
 
-      queue.add({ input: newInput, inputType, outputDir });
+      downloadQueue.add({ input: newInput, inputType, outputDir });
     });
   }
 
   if (inputType === 'remote-resource') {
-    log('Creating request ...');
-    let response;
-
-    try {
-      response = await client(input);
-    } catch (e) {
-      return;
-    }
-
     const html = await response.text();
     const sourceMaps = getAllSourceMapsFromText(html);
 
@@ -155,23 +164,21 @@ const downloadAndProcess = async (record) => {
       const newInput = resolveURL(input, sourceMap);
       const inputType = 'remote-sourcemap';
 
-      queue.add({ input: newInput, inputType, outputDir });
+      downloadQueue.add({ input: newInput, inputType, outputDir });
     });
   }
 
-  queue.locked = false;
-  radio.emit('record-processed');
+  downloadQueue.locked = false;
+  eventEmitter.emit('crawler-record-processed');
 }
 
 const crawler = async (input, inputType, outputDir, flags) => {
   currentFlags = flags;
 
-  queue.add({ input, inputType, outputDir });
+  downloadQueue.add({ input, inputType, outputDir });
 };
 
-radio.on('record-processed', () => log('event handled: "record-processed"'));
-radio.on('record-processed', downloadNextFile);
-radio.on('new-record', () => log('event handled: "new-record"'));
-radio.on('new-record', downloadNextFile);
+eventEmitter.on('crawler-record-processed', downloadNextFile);
+eventEmitter.on('new-crawler-record', downloadNextFile);
 
 module.exports = { crawler };

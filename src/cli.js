@@ -1,8 +1,11 @@
 const chalk = require('chalk');
 const meow = require('meow');
-const { globalLog } = require('./logger');
+const { generateSummary } = require('./stats');
+const { unpacker } = require('./unpack');
+const { stats } = require('./stats');
+const { eventEmitter } = require('./eventemitter');
 const { logo } = require('./utils/logo');
-const { createLogger, loggerConfig } = require('./logger');
+const { globalError, globalLog, createLogger, loggerConfig } = require('./logger');
 const { log } = createLogger(chalk.gray('cli'));
 
 const cli = meow(
@@ -11,15 +14,16 @@ const cli = meow(
 Usage: kaifu [options...] <url|file|directory>
    -o,  --output-dir <dir>   Output directory.
    -w,  --overwrite          Overwrite files if already exist.
-   -s,  --skip-empty         Don't create a file if sourcemap is empty.
-   -l,  --list <file>        Use a list of several inputs.
-        --verbose            Show everything.
-   -v,  --version
+   -s,  --skip-empty         Don't create a file if it's empty.
+        --short              Short summary.
+   -v,  --verbose            Show everything.
+        --version            Show current version.
    
 Examples:
-   kaifu --output-dir ./reddit https://reddit.com
+   kaifu --output-dir ./github https://github.com/
 `,
   {
+    description: false,
     flags: {
       outputDir: {
         type: 'string',
@@ -31,18 +35,18 @@ Examples:
         alias: 'w',
       },
 
+      short: {
+        type: 'boolean',
+      },
+
       skipEmpty: {
         type: 'boolean',
         alias: 's',
       },
 
-      list: {
-        type: 'string',
-        alias: 'l',
-      },
-
       verbose: {
         type: 'boolean',
+        alias: 'v',
       },
     },
   },
@@ -53,33 +57,32 @@ loggerConfig.verbose = cli.flags.verbose;
 const { runner } = require('./runner');
 
 (async () => {
-  globalLog(`\n${logo}\n`);
-
-  log('Initialized with following params:');
-
-  for (const flag in cli.flags) {
-    log(`   ${flag}:`, cli.flags[flag]);
-  }
-
-  log();
-  log('With following inputs:');
-
-  for (const input of cli.input) {
-    log(`   ${chalk.yellow(input)}`);
-  }
-
-  log();
+  log('Initialized with following params:', cli.flags);
+  log('With following inputs:', cli.input);
 
   if (cli.input.length === 0) {
-    console.error(chalk.red('Error: No input sources were defined'));
+    globalError('No input specified');
     process.exitCode = 1;
 
     return;
   }
 
+  globalLog(`\n${logo}\n`);
+
   for (const input of cli.input) {
-    log('Runner started with input', input);
+    globalLog('Loading resources:')
+    !cli.flags.short && globalLog()
     await runner(input, cli.flags);
-    log('Runner ended with input', input);
   }
+
+  eventEmitter.on('crawler-queue-is-empty', async () => {
+    globalLog('');
+    globalLog('Unboxing Source Maps files:');
+    await unpacker();
+  });
+
+  eventEmitter.on('unpack-queue-is-empty', () => {
+    globalLog('');
+    generateSummary(stats);
+  })
 })();
