@@ -41,7 +41,7 @@ const fixSource = (source) => {
 const unpacker = async () => {
   if (unboxQueue.queue.length > 0) {
     globalLog('');
-    globalLog('Unboxing Source Maps files:');
+    globalLog('Unboxing resources:');
   }
 
   await unpackNextFile();
@@ -66,13 +66,6 @@ const unpack = async (sourceMapPath, outputDir, flags, input) => {
   const sourceMap = await readFile(sourceMapPath, 'utf-8');
   const sourceMapFileName = sourceMapPath.split('/').slice(-1).join('');
 
-  if (flags.short) {
-    globalLog(` ▸ ${chalk.bold(sourceMapFileName)} → ${outputDir.replace(path.resolve(), '.')}${flags.merge ? '' : `/${sourceMapFileName}${POSTFIX}`}`);
-  } else {
-    globalLog();
-    globalLog(` 📦 ${chalk.bold(input)}`);
-  }
-
   let length = 0;
   let extensions = {};
   let treeString = '';
@@ -82,6 +75,19 @@ const unpack = async (sourceMapPath, outputDir, flags, input) => {
     await SourceMapConsumer.with(sourceMap, null, async (consumer) => {
       length = consumer.sources.length;
       extensions = {};
+
+      if (flags.short) {
+        globalLog(` ▸ ${
+          chalk.bold(sourceMapFileName)
+        } → ${
+          outputDir.replace(path.resolve(), '.')
+        }${
+          flags.merge ? '' : `/${sourceMapFileName}${POSTFIX}`
+        } ${chalk.grey(`[${length} file${length > 1 ? 's' : ''}]`)}`);
+      } else {
+        globalLog();
+        globalLog(` 📦 ${chalk.bold(input)}`);
+      }
 
       for (const source of consumer.sources) {
         verboseLog(` ${source}`);

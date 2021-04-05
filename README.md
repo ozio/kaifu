@@ -1,11 +1,14 @@
 # Kaifū
 
-An easy-to-use command-line tool to grab and unpack SourceMap files.
+Easy-to-use command-line tool to grab and unpack SourceMap files.
+
+### Installation
 
 ```bash
 npm install -g kaifu
 ```
 
+### Usage
 ```text
 Usage: kaifu [options...] <url|file|directory>
    -o,  --output-dir <dir>   Output directory.
@@ -19,11 +22,9 @@ Usage: kaifu [options...] <url|file|directory>
 Examples:
    kaifu --output-dir ./mdn https://developer.mozilla.org/
 ```
-
+### Preview
 ```
 $ npx kaifu --merge --output-dir ./ngrok http://6f0f744027c8.ngrok.io
-
-Kaifū v1.2.0
 
 Loading resources:
 
@@ -31,7 +32,7 @@ Loading resources:
  ▸ http://6f0f744027c8.ngrok.io/index.js
  ▸ http://6f0f744027c8.ngrok.io/index.js.map
 
-Unboxing Source Maps files:
+Unboxing resources:
 
  📦 http://6f0f744027c8.ngrok.io/index.js.map
  ├─ node_modules
@@ -65,6 +66,26 @@ Unboxing Source Maps files:
     └─ index.jsx [150 bytes]
 
 1 sourcemap file found, 14 files unboxed.
+```
+
+### Short version preview
+
+```
+$ kaifu --merge --short --output-dir ./mdn https://developer.mozilla.org/
+
+Loading resources:
+ ▸ https://developer.mozilla.org/static/js/runtime-main.bcb5cedd.js.map
+ ▸ https://developer.mozilla.org/static/js/2.b0186e16.chunk.js.map
+ ▸ https://developer.mozilla.org/static/js/main.e2b366ea.chunk.js.map
+ ▸ https://developer.mozilla.org/static/css/main.e7962908.chunk.css.map
+
+Unboxing resources:
+ ▸ runtime-main.bcb5cedd.js.map → ./developer.mozilla.org [1 file]
+ ▸ 2.b0186e16.chunk.js.map → ./developer.mozilla.org [39 files]
+ ▸ main.e2b366ea.chunk.js.map → ./developer.mozilla.org [41 files]
+ ▸ main.e7962908.chunk.css.map → ./developer.mozilla.org [71 files]
+
+4 sourcemap files found, 152 files unboxed.
 ```
 
 Kaifū means "unboxing" in Japanese.

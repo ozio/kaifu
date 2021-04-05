@@ -97,7 +97,7 @@ const downloadAndProcess = async (record) => {
       globalLog(chalk.bold(` ▸ ${url}`));
       stats.sourceMapsFound++;
     } else {
-      !currentFlags.short && globalLog(chalk.gray(` ▸ ${url}`));
+      globalLog(chalk.gray(` ▸ ${url}`));
       stats.resourcesDownloaded++;
     }
 
