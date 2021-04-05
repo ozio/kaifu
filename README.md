@@ -80,10 +80,10 @@ Loading resources:
  ▸ https://developer.mozilla.org/static/css/main.e7962908.chunk.css.map
 
 Unboxing resources:
- ▸ runtime-main.bcb5cedd.js.map → ./developer.mozilla.org [1 file]
- ▸ 2.b0186e16.chunk.js.map → ./developer.mozilla.org [39 files]
- ▸ main.e2b366ea.chunk.js.map → ./developer.mozilla.org [41 files]
- ▸ main.e7962908.chunk.css.map → ./developer.mozilla.org [71 files]
+ ▸ runtime-main.bcb5cedd.js.map → ./mdn [1 file]
+ ▸ 2.b0186e16.chunk.js.map → ./mdn [39 files]
+ ▸ main.e2b366ea.chunk.js.map → ./mdn [41 files]
+ ▸ main.e7962908.chunk.css.map → ./mdn [71 files]
 
 4 sourcemap files found, 152 files unboxed.
 ```
