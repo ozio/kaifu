@@ -8,18 +8,12 @@ const stats = {
   recoveredFilesExtensions: {}
 };
 
-const plural = (number, one) => {
-  if (number === 1) return one;
-
-  return one + 's';
-}
-
 const generateSummary = (completedStats) => {
   const s = completedStats;
 
   globalLog(
-    `${s.sourceMapsFound} sourcemap ${plural(s.sourceMapsFound, 'file')} found, ` +
-    `${s.filesRecovered} ${plural(s.filesRecovered, 'file')} unboxed.`
+    `${s.sourceMapsFound} sourcemap file${s.sourceMapsFound !== 1 ? 's' : ''} found, ` +
+    `${s.filesRecovered} file${s.filesRecovered !== 0 ? 's' : ''} unboxed.`
   );
 };
 
