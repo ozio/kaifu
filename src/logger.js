@@ -6,19 +6,19 @@ const loggerConfig = {
   silent: false,
 }
 
-const log = (...messages) => {
+const verboseLog = (...messages) => {
   if (!loggerConfig.verbose) return;
 
   console.log(`${chalk.bold.bgBlackBright(name)}`, ...messages);
 };
 
-const err = (...messages) => {
+const verboseError = (...messages) => {
   if (!loggerConfig.verbose) return;
 
   console.log(`${chalk.blackBright.bold.bgRedBright(name)}`, ...messages);
 };
 
-const warn = (...messages) => {
+const verboseWarning = (...messages) => {
   if (!loggerConfig.verbose) return;
 
   console.log(`${chalk.blackBright.bold.bgYellowBright(name)}`, ...messages);
@@ -44,10 +44,19 @@ const globalWarning = (...messages) => {
 
 const createLogger = (module) => {
   return {
-    log: (...messages) => log((module), ...messages),
-    err: (...messages) => err((module), ...messages),
-    warn: (...messages) => warn((module), ...messages),
+    verboseLog: (...messages) => verboseLog((module), ...messages),
+    verboseError: (...messages) => verboseError((module), ...messages),
+    verboseWarning: (...messages) => verboseWarning((module), ...messages),
   };
 };
 
-module.exports = { loggerConfig, createLogger, globalLog, globalError, globalWarning, log, err, warn };
+module.exports = {
+  loggerConfig,
+  createLogger,
+  globalLog,
+  globalError,
+  globalWarning,
+  verboseLog,
+  verboseError,
+  verboseWarning,
+};

@@ -1,32 +1,21 @@
 const cheerio = require('cheerio');
+const fs = require('fs');
+const path = require('path');
+const list = fs.readFileSync(path.resolve(__dirname, '../../skip.txt'), 'utf-8');
 
-const restrictedLinkParts = [
-  'yastatic.net',
-  's.w.org',
-  'static.criteo.net/js/ld',
-  'code.jquery.com/jquery-',
-  'vk.com/js/api/openapi.js',
-  'cdn.jsdelivr.net',
-  'ssp.rambler.ru/capirs_async.js',
-  'cdnjs.cloudflare.com',
-  'unpkg.com',
-  'api.mindbox.ru/scripts/v1/tracker.js',
-  'api.flocktory.com/v2/loader.js',
-  'bootstrapcdn.com',
+const restrictedLinkParts = list
+  .split('\n')
+  .map(line => {
+    const commentPosition = line.indexOf('#');
 
-  /* Google */
-  'ajax.googleapis.com',
-  'pagead2.googlesyndication.com',
-  'www.googletagmanager.com',
-  'fonts.googleapis.com',
-  'fonts.gstatic.com',
-  'www.gstatic.com',
-  'google-analytics.com',
-  'google-analytics.com/analytics.js',
-  'www.google.com/recaptcha/api.js',
-  'www.googletagservices.com/tag/js/gpt.js',
-  'www.googleoptimize.com/optimize.js'
-];
+    if (commentPosition >= 0) {
+      line = line.slice(0, commentPosition);
+    }
+
+    return line.trim();
+  })
+  .filter(line => line !== '')
+;
 
 const isThisLinkOK = (tagName, attrib = {}) => {
   if (tagName === 'link') {

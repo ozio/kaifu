@@ -1,6 +1,6 @@
 {
   "name": "kaifu",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Easy-to-use command-line tool to grab and unpack SourceMap files.",
   "main": "kaifu.js",
   "bin": {

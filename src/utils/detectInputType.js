@@ -4,7 +4,7 @@ const path = require('path');
 const { globalError } = require('../logger');
 const { getFirstLine } = require('./getFirstLine');
 
-const getInputURLType = (input) => {
+const detectInputURLType = (input) => {
   const url = new URL(input);
 
   const { protocol, pathname } = url;
@@ -28,9 +28,9 @@ const getInputURLType = (input) => {
   return 'remote-html';
 };
 
-const getInputType = async (input) => {
+const detectInputType = async (input) => {
   try {
-    return getInputURLType(input);
+    return detectInputURLType(input);
   } catch (e) {}
 
   try {
@@ -52,7 +52,7 @@ const getInputType = async (input) => {
           throw new Error(`Unknown file format: ${path.resolve(input)}`);
         }
 
-        await getInputType(firstLine);
+        await detectInputType(firstLine);
 
         return 'list-or-inputs';
       } catch (e) {
@@ -65,4 +65,4 @@ const getInputType = async (input) => {
   }
 };
 
-module.exports = { getInputType, getInputURLType };
+module.exports = { detectInputType, detectInputURLType };

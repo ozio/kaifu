@@ -1,18 +1,19 @@
 const path = require('path');
 const { URL } = require('url');
-const fs = require('fs');
 const chalk = require('chalk');
+const fs = require('fs');
+const { access, mkdir, writeFile } = fs.promises;
 const { stats } = require('./stats');
 const { globalLog, createLogger } = require('./logger');
 const { unboxQueue } = require('./unpack');
-const { getInputURLType } = require('./utils/getInputType');
+const { detectInputURLType } = require('./utils/detectInputType');
 const { eventEmitter } = require('./eventemitter');
 const { client } = require('./client');
 const { getAllSourceMapsFromText } = require('./utils/getAllSourceMapsFromText');
 const { resolveURL } = require('./utils/resolveURL');
 const { getAllResourcesFromHTML } = require('./utils/getAllResourcesFromHTML');
 const { generateRandomString } = require('./utils/generateRandomString');
-const { log } = createLogger(chalk.blue('crawler'));
+const { verboseLog } = createLogger(chalk.blue('crawler'));
 
 class DownloadQueue {
   constructor() {
@@ -22,10 +23,10 @@ class DownloadQueue {
   }
 
   add(record) {
-    log('New record in the queue', record);
+    verboseLog('New record in the queue', record);
 
     if (record.inputType === 'skip') {
-      log('File skipped for some reason:', record.inputType, record.input)
+      verboseLog('File skipped for some reason:', record.inputType, record.input)
       return;
     }
 
@@ -39,13 +40,13 @@ class DownloadQueue {
   }
 
   rollback(record) {
-    log('Return record to the queue', record);
+    verboseLog('Return record to the queue', record);
 
     this.queue.unshift(record);
   }
 
   next() {
-    log('Next record requested');
+    verboseLog('Next record requested');
 
     return this.queue.shift();
   }
@@ -59,7 +60,7 @@ const downloadNextFile = async () => {
   const nextFileRecord = downloadQueue.next();
 
   if (!nextFileRecord) {
-    log('Records queue has ended');
+    verboseLog('Records queue has ended');
     eventEmitter.emit('crawler-queue-is-empty');
     return;
   }
@@ -72,7 +73,7 @@ const downloadAndProcess = async (record) => {
 
   let inputType = record.inputType;
 
-  log('Is downloading locked now?', downloadQueue.locked);
+  verboseLog('Is downloading locked now?', downloadQueue.locked);
 
   if (downloadQueue.locked) {
     downloadQueue.rollback(record);
@@ -80,7 +81,7 @@ const downloadAndProcess = async (record) => {
     return;
   }
 
-  log(`Starting download resource "${input} with type "${inputType}"`);
+  verboseLog(`Starting download resource "${input} with type "${inputType}"`);
 
   downloadQueue.locked = true;
 
@@ -89,7 +90,7 @@ const downloadAndProcess = async (record) => {
   let response;
 
   try {
-    log('Making request ...');
+    verboseLog('Making request ...');
     const isSourceMap = input.endsWith('.map');
 
     if (isSourceMap) {
@@ -103,13 +104,12 @@ const downloadAndProcess = async (record) => {
     response = await client(input);
   } catch (e) {
     inputType = 'skip';
-    // globalLog(chalk.red(` ▸ ${e.message}`));
   }
 
   if (inputType === 'remote-sourcemap') {
-    log('Parsing response ...');
+    verboseLog('Parsing response ...');
     const text = await response.text();
-    log('Generating filename ...');
+    verboseLog('Generating filename ...');
     let filename = `sourcemap.${generateRandomString()}.map`;
 
     try {
@@ -117,23 +117,23 @@ const downloadAndProcess = async (record) => {
     } catch (e) {}
 
     try {
-      await fs.promises.lstat(path.resolve(outputDir, filename));
+      await access(path.resolve(outputDir, filename), fs.F_OK);
       const parts = filename.split('.');
       filename = `${parts.slice(0, -2).join('.')}.${generateRandomString()}.${parts.slice(-2).join('.')}`;
     } catch (e) {}
 
-    log(`Done! Filename will be ${filename}`);
+    verboseLog(`Filename will be ${filename}`);
 
     try {
-      await fs.promises.lstat(outputDir);
+      await access(outputDir, fs.F_OK);
     } catch (e) {
-      log(`Directory ${outputDir} doesn't exist. Creating ...`);
-      await fs.promises.mkdir(outputDir);
+      verboseLog(`Directory ${outputDir} doesn't exist. Creating ...`);
+      await mkdir(outputDir);
     }
 
-    log('Saving file ...');
-    await fs.promises.writeFile(path.resolve(outputDir, filename), text, 'utf-8');
-    log('File saved');
+    verboseLog('Saving file ...');
+    await writeFile(path.resolve(outputDir, filename), text, 'utf-8');
+    verboseLog('File saved');
 
     unboxQueue.add({
       filePath: path.resolve(outputDir, filename),
@@ -150,7 +150,7 @@ const downloadAndProcess = async (record) => {
 
     resources.forEach(resource => {
       const newInput = resolveURL(input, resource);
-      const inputType = getInputURLType(newInput);
+      const inputType = detectInputURLType(newInput);
 
       if (newInput.startsWith('http:') || newInput.startsWith('https:')) {
         downloadQueue.add({ input: newInput, inputType, outputDir });
@@ -182,6 +182,9 @@ const downloadAndProcess = async (record) => {
 }
 
 const crawler = async (input, inputType, outputDir, flags) => {
+  globalLog('Loading resources:')
+  !flags.short && globalLog()
+
   currentFlags = flags;
 
   downloadQueue.add({ input, inputType, outputDir });

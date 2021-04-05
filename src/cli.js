@@ -6,7 +6,7 @@ const { stats } = require('./stats');
 const { eventEmitter } = require('./eventemitter');
 const { logo } = require('./utils/logo');
 const { globalError, globalLog, createLogger, loggerConfig } = require('./logger');
-const { log } = createLogger(chalk.gray('cli'));
+const { verboseLog } = createLogger(chalk.gray('cli'));
 
 const cli = meow(
 `${logo}
@@ -53,7 +53,11 @@ Examples:
       merge: {
         type: 'boolean',
         alias: 'm',
-      }
+      },
+
+      skipUrl: {
+        type: 'string',
+      },
     },
   },
 );
@@ -63,8 +67,8 @@ loggerConfig.verbose = cli.flags.verbose;
 const { runner } = require('./runner');
 
 (async () => {
-  log('Initialized with following params:', cli.flags);
-  log('With following inputs:', cli.input);
+  verboseLog('Initialized with following params:', cli.flags);
+  verboseLog('With following inputs:', cli.input);
 
   if (cli.input.length === 0) {
     globalError('No input specified');
@@ -76,8 +80,6 @@ const { runner } = require('./runner');
   globalLog(`\n${logo}\n`);
 
   for (const input of cli.input) {
-    globalLog('Loading resources:')
-    !cli.flags.short && globalLog()
     await runner(input, cli.flags);
   }
 

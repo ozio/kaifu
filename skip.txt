@@ -1,0 +1,26 @@
+yastatic.net
+s.w.org
+static.criteo.net/js/ld
+code.jquery.com/jquery-
+vk.com/js/api/openapi.js
+cdn.jsdelivr.net
+ssp.rambler.ru/capirs_async.js
+cdnjs.cloudflare.com
+unpkg.com
+api.mindbox.ru/scripts/v1/tracker.js
+api.flocktory.com/v2/loader.js
+bootstrapcdn.com
+cdn.speedcurve.com/js/lux.js
+
+# Google
+ajax.googleapis.com
+pagead2.googlesyndication.com
+www.googletagmanager.com #lol
+fonts.googleapis.com
+fonts.gstatic.com
+www.gstatic.com
+google-analytics.com
+google-analytics.com/analytics.js
+www.google.com/recaptcha/api.js
+www.googletagservices.com/tag/js/gpt.js
+www.googleoptimize.com/optimize.js

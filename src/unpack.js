@@ -1,6 +1,7 @@
 const path = require('path');
-const fs = require('fs');
 const chalk = require('chalk');
+const fs = require('fs');
+const { readFile, mkdir, writeFile, unlink } = fs.promises;
 const { tree } = require('./utils/tree');
 const { eventEmitter } = require('./eventemitter');
 const { stats } = require('./stats');
@@ -8,7 +9,9 @@ const { globalLog } = require('./logger');
 const { globalError } = require('./logger');
 const { SourceMapConsumer } = require('source-map');
 const { createLogger } = require('./logger');
-const { log, err } = createLogger(chalk.green('unpack'));
+const { verboseLog, verboseError } = createLogger(chalk.green('unpack'));
+
+const POSTFIX = '__unboxed';
 
 class UnboxQueue {
   constructor() {
@@ -28,7 +31,7 @@ const unboxQueue = new UnboxQueue();
 
 const fixSource = (source) => {
   if (source.startsWith('webpack:///')) {
-    log('Source starts with wrong protocol (webpack:///). Fixing.')
+    verboseLog('Source starts with wrong protocol (webpack:///). Fixing.')
     return source.slice(11);
   }
 
@@ -60,11 +63,11 @@ const unpackNextFile = async () => {
 };
 
 const unpack = async (sourceMapPath, outputDir, flags, input) => {
-  const sourceMap = await fs.promises.readFile(sourceMapPath, 'utf-8');
+  const sourceMap = await readFile(sourceMapPath, 'utf-8');
   const sourceMapFileName = sourceMapPath.split('/').slice(-1).join('');
 
   if (flags.short) {
-    globalLog(` ▸ ${chalk.bold(input)}`);
+    globalLog(` ▸ ${chalk.bold(sourceMapFileName)} → ${outputDir.replace(path.resolve(), '.')}${flags.merge ? '' : `/${sourceMapFileName}${POSTFIX}`}`);
   } else {
     globalLog();
     globalLog(` 📦 ${chalk.bold(input)}`);
@@ -75,13 +78,13 @@ const unpack = async (sourceMapPath, outputDir, flags, input) => {
   let treeString = '';
 
   try {
-    log(`Start unpacking SourceMap "${sourceMapPath}" (${sourceMap.length} bytes)`)
+    verboseLog(`Start unpacking SourceMap "${sourceMapPath}" (${sourceMap.length} bytes)`)
     await SourceMapConsumer.with(sourceMap, null, async (consumer) => {
       length = consumer.sources.length;
       extensions = {};
 
       for (const source of consumer.sources) {
-        log(` ${source}`);
+        verboseLog(` ${source}`);
 
         const onlyFileName = source.split('/').slice(-1).join('');
         if (onlyFileName.includes('.')) {
@@ -100,27 +103,27 @@ const unpack = async (sourceMapPath, outputDir, flags, input) => {
         let sourceContent = consumer.sourceContentFor(source);
 
         if (sourceContent) {
-          log(`Source (${sourceContent.length} bytes)`);
+          verboseLog(`Source (${sourceContent.length} bytes)`);
         }
 
         if (!flags.skipEmpty) sourceContent = sourceContent || '';
 
         const fixedSource = fixSource(source);
-        const filePath = path.resolve(outputDir, flags.merge ? '' : `${sourceMapFileName}__unboxed`, fixedSource);
+        const filePath = path.resolve(outputDir, flags.merge ? '' : `${sourceMapFileName}${POSTFIX}`, fixedSource);
 
-        await fs.promises.mkdir(path.dirname(filePath), { recursive: true })
-        await fs.promises.writeFile(filePath, sourceContent);
+        await mkdir(path.dirname(filePath), { recursive: true })
+        await writeFile(filePath, sourceContent);
 
         stats.filesRecovered++;
 
         treeString += `${filePath.replace(path.resolve(outputDir), '')}|${sourceContent ? sourceContent.length : 0}\n`;
 
-        log(filePath.replace(path.resolve(outputDir), ''));
+        verboseLog(filePath.replace(path.resolve(outputDir), ''));
       }
     });
   } catch (e) {
     globalError(`Invalid format. ${e.message}`)
-    err(`Error while unpacking "${sourceMapPath}": ${e.message}`)
+    verboseError(`Error while unpacking "${sourceMapPath}": ${e.message}`)
   }
 
   if (!flags.short) {
@@ -128,7 +131,7 @@ const unpack = async (sourceMapPath, outputDir, flags, input) => {
   }
 
   try {
-    await fs.promises.unlink(sourceMapPath);
+    await unlink(sourceMapPath);
   } catch (e) {
     globalLog(e.message)
   }
