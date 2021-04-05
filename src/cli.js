@@ -15,12 +15,13 @@ Usage: kaifu [options...] <url|file|directory>
    -o,  --output-dir <dir>   Output directory.
    -w,  --overwrite          Overwrite files if already exist.
    -s,  --skip-empty         Don't create a file if it's empty.
+   -m,  --merge              Unsafe merge all recovered trees in one folder.
         --short              Short summary.
    -v,  --verbose            Show everything.
         --version            Show current version.
    
 Examples:
-   kaifu --output-dir ./github https://github.com/
+   kaifu --output-dir ./mdn https://developer.mozilla.org/
 `,
   {
     description: false,
@@ -48,6 +49,11 @@ Examples:
         type: 'boolean',
         alias: 'v',
       },
+
+      merge: {
+        type: 'boolean',
+        alias: 'm',
+      }
     },
   },
 );
@@ -76,8 +82,6 @@ const { runner } = require('./runner');
   }
 
   eventEmitter.on('crawler-queue-is-empty', async () => {
-    globalLog('');
-    globalLog('Unboxing Source Maps files:');
     await unpacker();
   });
 

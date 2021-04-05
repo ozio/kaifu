@@ -62,15 +62,11 @@ const generateLinesOutput = (treeObj) => {
       const isLast = !arr[idx + 1];
 
       if (!value.isFile) {
-        output += `${indent}${isLast ? ' └' : ' ├'} ${key}\n`;
+        output += `${indent}${isLast ? ' └─' : ' ├─'} ${key}\n`;
         render(value, level + 1, {...tails, [level]: isLast});
       } else {
-        output += `${indent}${isLast ? ' └' : ' ├'} ${key} ${size(`[${value.size} bytes]`)}\n`;
+        output += `${indent}${isLast ? ' └─' : ' ├─'} ${key} ${size(`[${value.size} bytes]`)}\n`;
       }
-
-      /*if (!arr[idx + 1]) {
-        output += `${indent}\n`;
-      }*/
     });
   };
 

@@ -2,15 +2,24 @@ const chalk = require('chalk');
 const fetch = require('node-fetch');
 const { globalWarning, globalError, createLogger } = require('./logger');
 const { log, err } = createLogger(chalk.magenta('client'))
+const pj = require('../package.json');
+
+const userAgent = `${pj.name}/${pj.version} (+${pj.homepage})`;
+log('Default user-agent will be', chalk.yellow(userAgent));
 
 const client = async (url) => {
   try {
     log(`Request ${url}`);
-    const response = await fetch(url);
+
+    const response = await fetch(url, {
+      headers: { 'User-Agent': userAgent },
+    });
+
     log(`Response ${chalk.green(response.status)}, size: ${response.headers.get('content-length')}`);
 
     if (response.status >= 400) {
       globalError(`Request failed (${response.status})`);
+      throw new Error(`Request failed (${response.status})`);
     }
 
     return response;

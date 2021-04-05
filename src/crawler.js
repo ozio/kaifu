@@ -68,7 +68,9 @@ const downloadNextFile = async () => {
 }
 
 const downloadAndProcess = async (record) => {
-  const { input, inputType, outputDir } = record;
+  const { input, outputDir } = record;
+
+  let inputType = record.inputType;
 
   log('Is downloading locked now?', downloadQueue.locked);
 
@@ -100,8 +102,8 @@ const downloadAndProcess = async (record) => {
 
     response = await client(input);
   } catch (e) {
-    globalLog(chalk.red(` ▸ ${e.message}`));
-    return;
+    inputType = 'skip';
+    // globalLog(chalk.red(` ▸ ${e.message}`));
   }
 
   if (inputType === 'remote-sourcemap') {
@@ -121,6 +123,13 @@ const downloadAndProcess = async (record) => {
     } catch (e) {}
 
     log(`Done! Filename will be ${filename}`);
+
+    try {
+      await fs.promises.lstat(outputDir);
+    } catch (e) {
+      log(`Directory ${outputDir} doesn't exist. Creating ...`);
+      await fs.promises.mkdir(outputDir);
+    }
 
     log('Saving file ...');
     await fs.promises.writeFile(path.resolve(outputDir, filename), text, 'utf-8');

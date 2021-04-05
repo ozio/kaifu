@@ -15,26 +15,21 @@ const runner = async (input, flags) => {
 
   stats.outputDirectories[outputDir] = true;
 
-  log();
   log('Input type detected:', inputType);
   log('Output dir generated:', outputDir);
-  log();
 
   try {
-    log('Creating directory:', outputDir)
-    await fs.promises.mkdir(outputDir);
-    log('Directory created');
-  } catch (e) {
+    await fs.promises.lstat(outputDir)
     if (!flags.overwrite) {
       throw new Error(`Directory or file '${outputDir}' already exist`)
     }
     log('Directory or file already exist, but passed following --overwrite/-w flag');
-  }
+  } catch (e) {}
 
   switch (inputType) {
     case 'local-sourcemap':
       log(`Input "${input}" typed as "${inputType}" going to be unpacked`);
-      await unpack(input, outputDir, cli.flags);
+      await unpack(input, outputDir, flags);
 
       break;
 

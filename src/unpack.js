@@ -36,6 +36,11 @@ const fixSource = (source) => {
 };
 
 const unpacker = async () => {
+  if (unboxQueue.queue.length > 0) {
+    globalLog('');
+    globalLog('Unboxing Source Maps files:');
+  }
+
   await unpackNextFile();
 }
 
@@ -43,7 +48,7 @@ const unpackNextFile = async () => {
   const record = unboxQueue.next();
 
   if (!record) {
-    eventEmitter.emit('unpack-queue-is-empty')
+    eventEmitter.emit('unpack-queue-is-empty');
     return;
   }
 
@@ -56,6 +61,7 @@ const unpackNextFile = async () => {
 
 const unpack = async (sourceMapPath, outputDir, flags, input) => {
   const sourceMap = await fs.promises.readFile(sourceMapPath, 'utf-8');
+  const sourceMapFileName = sourceMapPath.split('/').slice(-1).join('');
 
   if (flags.short) {
     globalLog(` ▸ ${chalk.bold(input)}`);
@@ -100,8 +106,7 @@ const unpack = async (sourceMapPath, outputDir, flags, input) => {
         if (!flags.skipEmpty) sourceContent = sourceContent || '';
 
         const fixedSource = fixSource(source);
-
-        const filePath = path.resolve(outputDir, fixedSource);
+        const filePath = path.resolve(outputDir, flags.merge ? '' : `${sourceMapFileName}__unboxed`, fixedSource);
 
         await fs.promises.mkdir(path.dirname(filePath), { recursive: true })
         await fs.promises.writeFile(filePath, sourceContent);
