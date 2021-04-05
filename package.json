@@ -1,6 +1,6 @@
 {
   "name": "kaifu",
-  "version": "1.2.2",
+  "version": "1.3.0",
   "description": "Easy-to-use command-line tool to grab and unpack SourceMap files.",
   "main": "kaifu.js",
   "bin": {
@@ -14,7 +14,9 @@
     "source-map",
     "sourcemap",
     "sourcemaps",
-    "cli"
+    "cli",
+    "unpack",
+    "unboxing"
   ],
   "author": "Nikolay Solovyov <i@mr-ozio.ru>",
   "license": "MIT",

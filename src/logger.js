@@ -3,7 +3,7 @@ const { name } = require('../package.json');
 
 const loggerConfig = {
   verbose: false,
-  silent: false,
+  quiet: false,
 }
 
 const verboseLog = (...messages) => {
@@ -25,19 +25,19 @@ const verboseWarning = (...messages) => {
 };
 
 const globalLog = (...messages) => {
-  if (loggerConfig.silent || loggerConfig.verbose === true) return;
+  if (loggerConfig.quiet || loggerConfig.verbose) return;
 
   console.log(...messages);
 };
 
 const globalError = (...messages) => {
-  if (loggerConfig.silent || loggerConfig.verbose === true) return;
+  if (loggerConfig.quiet || loggerConfig.verbose) return;
 
   console.error(chalk.red.bold('Error:'), ...messages);
 };
 
 const globalWarning = (...messages) => {
-  if (loggerConfig.silent || loggerConfig.verbose === true) return;
+  if (loggerConfig.quiet || loggerConfig.verbose) return;
 
   console.warn(chalk.yellow.bold('Warning:'),...messages);
 };

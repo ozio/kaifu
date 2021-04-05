@@ -12,13 +12,13 @@ const cli = meow(
 `${logo}
 
 Usage: kaifu [options...] <url|file|directory>
-   -o,  --output-dir <dir>   Output directory.
-   -w,  --overwrite          Overwrite files if already exist.
-   -s,  --skip-empty         Don't create a file if it's empty.
-   -m,  --merge              Unsafe merge all recovered trees in one folder.
-        --short              Short summary.
-   -v,  --verbose            Show everything.
-        --version            Show current version.
+   -o,  --output-dir <dir>   Output directory
+   -m,  --merge              Unsafe merge all unboxed trees in one folder
+   -s,  --short              Short summary
+   -v,  --verbose            Make the operation more talkative
+   -q,  --quiet              Make the operation less talkative
+        --skip-empty         Do not unbox empty files
+        --version            Show version number and exit
    
 Examples:
    kaifu --output-dir ./mdn https://developer.mozilla.org/
@@ -31,16 +31,12 @@ Examples:
         alias: 'o',
       },
 
-      overwrite: {
+      merge: {
         type: 'boolean',
-        alias: 'w',
+        alias: 'm',
       },
 
       short: {
-        type: 'boolean',
-      },
-
-      skipEmpty: {
         type: 'boolean',
         alias: 's',
       },
@@ -50,19 +46,26 @@ Examples:
         alias: 'v',
       },
 
-      merge: {
+      skipEmpty: {
         type: 'boolean',
-        alias: 'm',
       },
 
+      /*
       skipUrl: {
         type: 'string',
       },
+
+      overwrite: {
+        type: 'boolean',
+        alias: 'w',
+      },
+      */
     },
   },
 );
 
 loggerConfig.verbose = cli.flags.verbose;
+loggerConfig.quiet = cli.flags.quiet;
 
 const { runner } = require('./runner');
 

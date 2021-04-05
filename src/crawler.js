@@ -14,58 +14,20 @@ const { resolveURL } = require('./utils/resolveURL');
 const { getAllResourcesFromHTML } = require('./utils/getAllResourcesFromHTML');
 const { generateRandomString } = require('./utils/generateRandomString');
 const { verboseLog } = createLogger(chalk.blue('crawler'));
+const { Queue } = require('./utils/queue');
 
-class DownloadQueue {
-  constructor() {
-    this.locked = false;
-    this.queue = [];
-    this.cache = {};
-  }
-
-  add(record) {
-    verboseLog('New record in the queue', record);
-
-    if (record.inputType === 'skip') {
-      verboseLog('File skipped for some reason:', record.inputType, record.input)
-      return;
-    }
-
-    if (this.cache[record.input]) return;
-    this.cache[record.input] = true;
-
-    if (!this.queue.some(r => r.input === record.input)) {
-      this.queue.push(record);
-      eventEmitter.emit('new-crawler-record');
-    }
-  }
-
-  rollback(record) {
-    verboseLog('Return record to the queue', record);
-
-    this.queue.unshift(record);
-  }
-
-  next() {
-    verboseLog('Next record requested');
-
-    return this.queue.shift();
-  }
-}
-
-const downloadQueue = new DownloadQueue();
+const downloadQueue = new Queue(record => record.input);
+downloadQueue.on('new-record', () => eventEmitter.emit('new-crawler-record'));
 
 let currentFlags;
 
 const downloadNextFile = async () => {
   const nextFileRecord = downloadQueue.next();
 
-  if (!nextFileRecord) {
-    verboseLog('Records queue has ended');
-    eventEmitter.emit('crawler-queue-is-empty');
-    return;
-  }
+  if (nextFileRecord) return await downloadAndProcess(nextFileRecord);
 
-  return await downloadAndProcess(nextFileRecord)
+  verboseLog('Records queue has ended');
+  eventEmitter.emit('crawler-queue-is-empty');
 }
 
 const downloadAndProcess = async (record) => {
@@ -81,7 +43,7 @@ const downloadAndProcess = async (record) => {
     return;
   }
 
-  verboseLog(`Starting download resource "${input} with type "${inputType}"`);
+  verboseLog(`Starting download resource "${input}" with type "${inputType}"`);
 
   downloadQueue.locked = true;
 
@@ -153,6 +115,8 @@ const downloadAndProcess = async (record) => {
       const inputType = detectInputURLType(newInput);
 
       if (newInput.startsWith('http:') || newInput.startsWith('https:')) {
+        if (inputType === 'skip') return;
+
         downloadQueue.add({ input: newInput, inputType, outputDir });
       }
     });

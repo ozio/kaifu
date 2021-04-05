@@ -3,6 +3,7 @@ const chalk = require('chalk');
 const fs = require('fs');
 const { readFile, mkdir, writeFile, unlink } = fs.promises;
 const { tree } = require('./utils/tree');
+const { Queue } = require('./utils/queue');
 const { eventEmitter } = require('./eventemitter');
 const { stats } = require('./stats');
 const { globalLog } = require('./logger');
@@ -13,21 +14,7 @@ const { verboseLog, verboseError } = createLogger(chalk.green('unpack'));
 
 const POSTFIX = '__unboxed';
 
-class UnboxQueue {
-  constructor() {
-    this.queue = [];
-  }
-
-  add(record) {
-    this.queue.push(record);
-  }
-
-  next() {
-    return this.queue.shift();
-  }
-}
-
-const unboxQueue = new UnboxQueue();
+const unboxQueue = new Queue();
 
 const fixSource = (source) => {
   if (source.startsWith('webpack:///')) {

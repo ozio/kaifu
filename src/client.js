@@ -1,6 +1,6 @@
 const chalk = require('chalk');
 const fetch = require('node-fetch');
-const { globalWarning, globalError, createLogger } = require('./logger');
+const { globalLog, globalError, createLogger } = require('./logger');
 const { verboseLog, verboseError } = createLogger(chalk.magenta('client'))
 const pj = require('../package.json');
 
@@ -26,8 +26,14 @@ const client = async (url) => {
   } catch (e) {
     verboseError(`Request failed: ${e.errno}, ${e.response ? e.response.status : e.message}`);
 
+    if (e.errno === 'DEPTH_ZERO_SELF_SIGNED_CERT') {
+      globalError('The website is using self-signed certificate.')
+      globalLog('You could use environment variable NODE_TLS_REJECT_UNAUTHORIZED=0 as a fast, but very unsecure, fix.')
+    }
+
     if (e.errno === 'SELF_SIGNED_CERT_IN_CHAIN') {
-      globalWarning('You can use environment variable NODE_TLS_REJECT_UNAUTHORIZED=0 as a fast, but very unsecure, fix.')
+      globalError('There is a self-signed certificate in chain.')
+      globalLog('You could use environment variable NODE_TLS_REJECT_UNAUTHORIZED=0 as a fast, but very unsecure, fix.')
     }
 
     if (e.errno === 'ENOTFOUND') {
