@@ -22,6 +22,7 @@ const convertStringToTree = (string) => {
   const lines = string.split('\n')
     .sort()
     .map(line => line.split('/'))
+  ;
   const treeObj = {}
   let name;
 

@@ -60,7 +60,7 @@ const detectInputType = async (input) => {
       }
     }
   } catch (e) {
-    globalError('Invalid input');
+    globalError(`Invalid input (${input})`);
     throw e;
   }
 };

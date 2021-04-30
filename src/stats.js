@@ -5,16 +5,20 @@ const stats = {
   sourceMapsFound: 0,
   filesRecovered: 0,
   outputDirectories: {},
-  recoveredFilesExtensions: {}
+  recoveredFilesExtensions: {},
 };
 
-const generateSummary = (completedStats) => {
-  const s = completedStats;
+const s = (num) => {
+  if (num === 1) return 's';
+  return '';
+}
 
-  globalLog(
-    `${s.sourceMapsFound} sourcemap file${s.sourceMapsFound !== 1 ? 's' : ''} found, ` +
-    `${s.filesRecovered} file${s.filesRecovered !== 0 ? 's' : ''} unboxed.`
-  );
+const generateSummary = (completedStats) => {
+  const stats = completedStats;
+  const sMF = stats.sourceMapsFound;
+  const fR = stats.filesRecovered;
+
+  globalLog(`${sMF} sourcemap file${s(sMF)} found, ${fR} file${s(fR)} unboxed.`);
 };
 
 module.exports = { generateSummary, stats };

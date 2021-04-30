@@ -15,11 +15,11 @@ const { getAllResourcesFromHTML } = require('./utils/getAllResourcesFromHTML');
 const { generateRandomString } = require('./utils/generateRandomString');
 const { verboseLog } = createLogger(chalk.blue('crawler'));
 const { Queue } = require('./utils/queue');
+const { options } = require('./options');
+const { flags } = options;
 
 const downloadQueue = new Queue(record => record.input);
 downloadQueue.on('new-record', () => eventEmitter.emit('new-crawler-record'));
-
-let currentFlags;
 
 const downloadNextFile = async () => {
   const nextFileRecord = downloadQueue.next();
@@ -97,12 +97,9 @@ const downloadAndProcess = async (record) => {
     await writeFile(path.resolve(outputDir, filename), text, 'utf-8');
     verboseLog('File saved');
 
-    unboxQueue.add({
-      filePath: path.resolve(outputDir, filename),
-      flags: currentFlags,
-      outputDir,
-      input,
-    });
+    const filePath = path.resolve(outputDir, filename);
+
+    unboxQueue.add({ filePath, outputDir, input });
   }
 
   if (inputType === 'remote-html') {
@@ -145,11 +142,9 @@ const downloadAndProcess = async (record) => {
   eventEmitter.emit('crawler-record-processed');
 }
 
-const crawler = async (input, inputType, outputDir, flags) => {
-  globalLog('Loading resources:')
-  !flags.short && globalLog()
-
-  currentFlags = flags;
+const crawler = async (input, inputType, outputDir) => {
+  globalLog('Loading resources:');
+  !flags.short && globalLog();
 
   downloadQueue.add({ input, inputType, outputDir });
 };

@@ -11,6 +11,8 @@ const { globalError } = require('./logger');
 const { SourceMapConsumer } = require('source-map');
 const { createLogger } = require('./logger');
 const { verboseLog, verboseError } = createLogger(chalk.green('unpack'));
+const { options } = require('./options');
+const { flags } = options;
 
 const POSTFIX = '__unboxed';
 
@@ -42,14 +44,14 @@ const unpackNextFile = async () => {
     return;
   }
 
-  const {filePath, outputDir, flags, input} = record;
+  const {filePath, outputDir, input} = record;
 
-  await unpack(filePath, outputDir, flags, input);
+  await unpack(filePath, outputDir, input);
 
   eventEmitter.emit('unpack-record-processed');
 };
 
-const unpack = async (sourceMapPath, outputDir, flags, input) => {
+const unpack = async (sourceMapPath, outputDir, input) => {
   const sourceMap = await readFile(sourceMapPath, 'utf-8');
   const sourceMapFileName = sourceMapPath.split('/').slice(-1).join('');
 
@@ -58,7 +60,7 @@ const unpack = async (sourceMapPath, outputDir, flags, input) => {
   let treeString = '';
 
   try {
-    verboseLog(`Start unpacking SourceMap "${sourceMapPath}" (${sourceMap.length} bytes)`)
+    verboseLog(`Start unpacking SourceMap "${sourceMapPath}" (${sourceMap.length} bytes)`);
     await SourceMapConsumer.with(sourceMap, null, async (consumer) => {
       length = consumer.sources.length;
       extensions = {};
@@ -104,7 +106,7 @@ const unpack = async (sourceMapPath, outputDir, flags, input) => {
         const fixedSource = fixSource(source);
         const filePath = path.resolve(outputDir, flags.merge ? '' : `${sourceMapFileName}${POSTFIX}`, fixedSource);
 
-        await mkdir(path.dirname(filePath), { recursive: true })
+        await mkdir(path.dirname(filePath), { recursive: true });
         await writeFile(filePath, sourceContent);
 
         stats.filesRecovered++;
@@ -115,8 +117,8 @@ const unpack = async (sourceMapPath, outputDir, flags, input) => {
       }
     });
   } catch (e) {
-    globalError(`Invalid format. ${e.message}`)
-    verboseError(`Error while unpacking "${sourceMapPath}": ${e.message}`)
+    globalError(`Invalid format. ${e.message}`);
+    verboseError(`Error while unpacking "${sourceMapPath}": ${e.message}`);
   }
 
   if (!flags.short) {
@@ -126,7 +128,7 @@ const unpack = async (sourceMapPath, outputDir, flags, input) => {
   try {
     await unlink(sourceMapPath);
   } catch (e) {
-    globalLog(e.message)
+    globalLog(e.message);
   }
 };
 

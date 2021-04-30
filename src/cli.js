@@ -7,6 +7,7 @@ const { eventEmitter } = require('./eventemitter');
 const { logo } = require('./utils/logo');
 const { globalError, globalLog, createLogger, loggerConfig } = require('./logger');
 const { verboseLog } = createLogger(chalk.gray('cli'));
+const { options, setOptions } = require('./options');
 
 const cli = meow(
 `${logo}
@@ -64,26 +65,30 @@ Examples:
   },
 );
 
-loggerConfig.verbose = cli.flags.verbose;
-loggerConfig.quiet = cli.flags.quiet;
+setOptions({ flags: cli.flags, input: cli.input });
+
+loggerConfig.verbose = options.flags.verbose;
+loggerConfig.quiet = options.flags.quiet;
 
 const { runner } = require('./runner');
 
 (async () => {
-  verboseLog('Initialized with following params:', cli.flags);
-  verboseLog('With following inputs:', cli.input);
+  verboseLog('Initialized with following params:', options.flags);
+  verboseLog('With following inputs:', options.input);
 
-  if (cli.input.length === 0) {
+  if (options.input.length === 0) {
     globalError('No input specified');
     process.exitCode = 1;
 
     return;
   }
 
-  globalLog(`\n${logo}\n`);
+  globalLog();
+  globalLog(logo);
+  globalLog();
 
-  for (const input of cli.input) {
-    await runner(input, cli.flags);
+  for (const input of options.input) {
+    await runner(input);
   }
 
   eventEmitter.on('crawler-queue-is-empty', async () => {
@@ -93,5 +98,5 @@ const { runner } = require('./runner');
   eventEmitter.on('unpack-queue-is-empty', () => {
     globalLog('');
     generateSummary(stats);
-  })
+  });
 })();

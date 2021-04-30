@@ -5,9 +5,9 @@ const shortenString = (string, maxLength = 30, cutPos = 'center') => {
   if (cutPos === 'center') {
     const size = Math.floor(maxLength / 2);
 
-    return `${string.slice(0, size)}...${string.slice(size * -1)}`
+    return `${string.slice(0, size)}...${string.slice(size * -1)}`;
   } else {
-    return `...${string.slice(maxLength * -1)}`
+    return `...${string.slice(maxLength * -1)}`;
   }
 };
 
