@@ -1,6 +1,6 @@
 {
   "name": "kaifu",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Easy-to-use command-line tool to grab and unpack SourceMap files.",
   "main": "kaifu.js",
   "bin": {
@@ -22,10 +22,10 @@
   "license": "MIT",
   "homepage": "https://github.com/ozio/kaifu",
   "dependencies": {
-    "chalk": "4.1.1",
-    "cheerio": "1.0.0-rc.5",
+    "chalk": "4.1.2",
+    "cheerio": "1.0.0-rc.12",
     "meow": "9.0.0",
-    "node-fetch": "2.6.1",
-    "source-map": "0.7.3"
+    "node-fetch": "2.6.7",
+    "source-map": "0.7.4"
   }
 }

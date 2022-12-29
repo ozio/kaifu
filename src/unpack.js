@@ -12,7 +12,6 @@ const { SourceMapConsumer } = require('source-map');
 const { createLogger } = require('./logger');
 const { verboseLog, verboseError } = createLogger(chalk.green('unpack'));
 const { options } = require('./options');
-const { flags } = options;
 
 const POSTFIX = '__unboxed';
 
@@ -52,6 +51,7 @@ const unpackNextFile = async () => {
 };
 
 const unpack = async (sourceMapPath, outputDir, input) => {
+  const flags = options.flags
   const sourceMap = await readFile(sourceMapPath, 'utf-8');
   const sourceMapFileName = sourceMapPath.split('/').slice(-1).join('');
 
