@@ -73,7 +73,7 @@ const downloadAndProcess = async (record) => {
 
   if (inputType === 'remote-sourcemap') {
     verboseLog('Parsing response ...')
-    const text = await response.text
+    const text = await response.text()
     verboseLog('Generating filename ...')
     let filename = `sourcemap.${generateRandomString()}.map`
 
@@ -106,7 +106,7 @@ const downloadAndProcess = async (record) => {
   }
 
   if (inputType === 'remote-html') {
-    const html = await response.text
+    const html = await response.text()
     const resources = await getAllResourcesFromHTML(html)
     const sourceMaps = getAllSourceMapsFromText(html)
 
@@ -130,7 +130,7 @@ const downloadAndProcess = async (record) => {
   }
 
   if (inputType === 'remote-resource') {
-    const html = await response.text
+    const html = await response.text()
     const sourceMaps = getAllSourceMapsFromText(html)
 
     sourceMaps.forEach(sourceMap => {

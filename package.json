@@ -1,6 +1,6 @@
 {
   "name": "kaifu",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Easy-to-use command-line tool to grab and unpack SourceMap files.",
   "main": "kaifu.mjs",
   "bin": {
@@ -24,6 +24,7 @@
   "dependencies": {
     "chalk": "5.2.0",
     "meow": "11.0.0",
+    "node-fetch": "3.3.0",
     "node-html-parser": "6.1.4",
     "source-map": "0.7.4"
   },

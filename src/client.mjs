@@ -1,6 +1,6 @@
 import chalk from 'chalk'
+import fetch from 'node-fetch'
 import { createLogger, globalError, globalLog } from './logger.mjs'
-import { request } from './utils/request.mjs'
 import pj from '../package.json' assert { type: 'json' }
 
 const { name, version, homepage } = pj
@@ -14,8 +14,8 @@ export const client = async (url) => {
   try {
     verboseLog(`Request ${url}`)
 
-    const response = await request(url, {
-      'User-Agent': userAgent,
+    const response = await fetch(url, {
+      headers: { 'User-Agent': userAgent },
     })
 
     verboseLog(`Response ${chalk.green(response.status)}, size: ${response.headers['content-length']}`)
