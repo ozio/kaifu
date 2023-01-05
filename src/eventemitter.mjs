@@ -1,5 +1,4 @@
-const EventEmitter = require('events');
-const eventEmitter = new EventEmitter();
+import EventEmitter from 'node:events'
 
 // Events
 // - crawler-queue-is-empty
@@ -8,4 +7,4 @@ const eventEmitter = new EventEmitter();
 // - unpack-queue-is-empty
 // - unpack-record-processed
 
-module.exports = { eventEmitter };
+export const eventEmitter = new EventEmitter();
