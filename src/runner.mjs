@@ -19,7 +19,7 @@ export const runner = async (input) => {
   try {
     inputType = await detectInputType(input)
   } catch (e) {
-    globalLog(e.message)
+    globalLog(`Error detecting input type: ${e.message}`)
     return
   }
 
@@ -28,60 +28,61 @@ export const runner = async (input) => {
   stats.outputDirectories[outputDir] = true
 
   verboseLog('Input type detected:', inputType)
-  verboseLog('Output dir generated:', outputDir)
+  verboseLog('Output directory generated:', outputDir)
 
   try {
     await access(outputDir, fs.F_OK)
     if (!flags.overwrite) {
-      // TODO: throw caught locally, something is wrong here
-      throw new Error(`Directory or file '${outputDir}' already exist`)
+      throw new Error(`Directory or file '${outputDir}' already exists`)
     }
-    verboseLog('Directory or file already exist, but passed following --overwrite/-w flag')
-  } catch (e) {}
+    verboseLog('Directory or file already exists, but proceeding due to --overwrite flag')
+  } catch (e) {
+    if (e.code !== 'ENOENT') {
+      globalLog(`Error accessing output directory: ${e.message}`)
+      return
+    }
+  }
 
   switch (inputType) {
     case 'local-sourcemap':
-      verboseLog(`Input "${input}" typed as "${inputType}" going to be unpacked`)
+      verboseLog(`Processing local sourcemap input: "${input}"`)
       await unpack(input, outputDir)
-
       break
 
     case 'directory':
-      verboseLog(`Input "${input}" typed as "${inputType}" reading directory`)
+      verboseLog(`Processing directory input: "${input}"`)
       const files = await readdir(input)
-
       for await (const file of files) {
         if (file.endsWith('.map')) {
-          verboseLog(`File ${file} will be unpacked`)
+          verboseLog(`Unpacking file: ${file}`)
           await unpack(path.resolve(input, file), outputDir)
         } else {
-          verboseLog(`File ${file} will not be unpacked, because it is not a SourceMap file`)
+          verboseLog(`Skipping file: ${file} (not a SourceMap)`)
         }
       }
-
       break
 
     case 'list-or-inputs':
-      verboseLog(`Input "${input}" typed as "${inputType}" reading file "${input}" with all inputs`)
-      const file = await readFile(input, 'utf-8')
-      const newInputs = file.split('\n').map(s => s.trim())
-      verboseLog(`${newInputs.length} input(-s) has found`)
-
-      for (const input of newInputs) {
-        verboseLog(`Starting runner with input "${input}"`)
-        await runner(input)
+      verboseLog(`Processing list of inputs from file: "${input}"`)
+      const fileContent = await readFile(input, 'utf-8')
+      const newInputs = fileContent.split('\n')
+        .map(s => s.trim())
+      verboseLog(`${newInputs.length} input(s) found`)
+      for (const newInput of newInputs) {
+        verboseLog(`Starting runner for input: "${newInput}"`)
+        await runner(newInput)
       }
-
       break
 
     case 'remote-sourcemap':
     case 'remote-resource':
     case 'remote-html':
-      verboseLog(`Input "${input}" typed as "${inputType}" starting crawler`)
+      verboseLog(`Processing remote input: "${input}" (type: "${inputType}")`)
       await crawler(input, inputType, outputDir)
       break
 
     default:
+      globalLog(`Unknown input type: "${inputType}". Skipping processing.`)
       break
   }
 }

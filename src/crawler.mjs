@@ -17,7 +17,6 @@ import { Queue } from './utils/queue.mjs'
 import { options } from './options.mjs'
 
 const { verboseLog } = createLogger(chalk.blue('crawler'))
-
 const { flags } = options
 
 const downloadQueue = new Queue(record => record.input)
@@ -28,33 +27,29 @@ const downloadNextFile = async () => {
 
   if (nextFileRecord) return await downloadAndProcess(nextFileRecord)
 
-  verboseLog('Records queue has ended')
+  verboseLog('Download queue is empty.')
   eventEmitter.emit('crawler-queue-is-empty')
 }
 
 const downloadAndProcess = async (record) => {
   const { input, outputDir } = record
-
   let inputType = record.inputType
 
-  verboseLog('Is downloading locked now?', downloadQueue.locked)
+  verboseLog('Is download locked?', downloadQueue.locked)
 
   if (downloadQueue.locked) {
     downloadQueue.rollback(record)
-
     return
   }
 
-  verboseLog(`Starting download resource "${input}" with type "${inputType}"`)
-
+  verboseLog(`Starting download: "${input}" (type: "${inputType}")`)
   downloadQueue.locked = true
 
   const url = new URL(input)
-
   let response
 
   try {
-    verboseLog('Making request ...')
+    verboseLog('Sending request...')
     const isSourceMap = input.endsWith('.map')
 
     if (isSourceMap) {
@@ -68,40 +63,44 @@ const downloadAndProcess = async (record) => {
     response = await client(input)
   } catch (e) {
     inputType = 'skip'
-    console.log(e)
+    console.error(e)
   }
 
   if (inputType === 'remote-sourcemap') {
-    verboseLog('Parsing response ...')
+    verboseLog('Parsing response...')
     const text = await response.text()
-    verboseLog('Generating filename ...')
+    verboseLog('Generating filename...')
     let filename = `sourcemap.${generateRandomString()}.map`
 
     try {
-      filename = url.pathname.split('/').slice(-1)[0]
-    } catch (e) {}
+      filename = url.pathname.split('/')
+        .pop()
+    } catch (e) {
+    }
 
     try {
       await access(path.resolve(outputDir, filename), fs.F_OK)
       const parts = filename.split('.')
-      filename = `${parts.slice(0, -2).join('.')}.${generateRandomString()}.${parts.slice(-2).join('.')}`
-    } catch (e) {}
+      filename = `${parts.slice(0, -2)
+        .join('.')}.${generateRandomString()}.${parts.slice(-2)
+        .join('.')}`
+    } catch (e) {
+    }
 
-    verboseLog(`Filename will be ${filename}`)
+    verboseLog(`Generated filename: ${filename}`)
 
     try {
       await access(outputDir, fs.F_OK)
     } catch (e) {
-      verboseLog(`Directory ${outputDir} doesn't exist. Creating ...`)
+      verboseLog(`Output directory does not exist, creating: ${outputDir}`)
       await mkdir(outputDir)
     }
 
-    verboseLog('Saving file ...')
+    verboseLog('Saving file...')
     await writeFile(path.resolve(outputDir, filename), text, 'utf-8')
-    verboseLog('File saved')
+    verboseLog('File saved.')
 
     const filePath = path.resolve(outputDir, filename)
-
     unboxQueue.add({ filePath, outputDir, input })
   }
 
@@ -115,17 +114,15 @@ const downloadAndProcess = async (record) => {
       const inputType = detectInputURLType(newInput)
 
       if (newInput.startsWith('http:') || newInput.startsWith('https:')) {
-        if (inputType === 'skip') return
-
-        downloadQueue.add({ input: newInput, inputType, outputDir })
+        if (inputType !== 'skip') {
+          downloadQueue.add({ input: newInput, inputType, outputDir })
+        }
       }
     })
 
     sourceMaps.forEach(sourceMap => {
       const newInput = resolveURL(input, sourceMap)
-      const inputType = 'remote-sourcemap'
-
-      downloadQueue.add({ input: newInput, inputType, outputDir })
+      downloadQueue.add({ input: newInput, inputType: 'remote-sourcemap', outputDir })
     })
   }
 
@@ -135,9 +132,7 @@ const downloadAndProcess = async (record) => {
 
     sourceMaps.forEach(sourceMap => {
       const newInput = resolveURL(input, sourceMap)
-      const inputType = 'remote-sourcemap'
-
-      downloadQueue.add({ input: newInput, inputType, outputDir })
+      downloadQueue.add({ input: newInput, inputType: 'remote-sourcemap', outputDir })
     })
   }
 
@@ -147,7 +142,7 @@ const downloadAndProcess = async (record) => {
 
 export const crawler = async (input, inputType, outputDir) => {
   globalLog('Loading resources:')
-  !flags.short && globalLog()
+  if (!flags.short) globalLog()
 
   downloadQueue.add({ input, inputType, outputDir })
 }

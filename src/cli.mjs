@@ -13,16 +13,19 @@ const cli = meow(
   `${logo}
 
 Usage: kaifu [options...] <url|file|directory>
-   -o,  --output-dir <dir>   Output directory
-   -m,  --merge              Unsafe merge all unboxed trees in one folder
-   -s,  --short              Short summary
-   -v,  --verbose            Make the operation more talkative
-   -q,  --quiet              Make the operation less talkative
-        --skip-empty         Do not unbox empty files
-        --version            Show version number and exit
+
+Options:
+   -o,  --output-dir <dir>   Specify the output directory.
+   -m,  --merge              Unsafely merge all unboxed trees into a single folder.
+   -s,  --short              Display a short summary.
+   -v,  --verbose            Provide detailed output.
+   -q,  --quiet              Suppress most output messages (minimal output).
+        --skip-empty         Skip unboxing of empty files.
+        --version            Show the version number and exit.
    
 Examples:
-   kaifu --output-dir ./mdn https://developer.mozilla.org/
+   kaifu --o ./mdn https://developer.mozilla.org/
+   kaifu -sm https://developer.mozilla.org/
 `,
   {
     importMeta: import.meta,
@@ -30,38 +33,32 @@ Examples:
     flags: {
       outputDir: {
         type: 'string',
-        alias: 'o',
+        aliases: ['o'],
       },
 
       merge: {
         type: 'boolean',
-        alias: 'm',
+        aliases: ['m'],
       },
 
       short: {
         type: 'boolean',
-        alias: 's',
+        aliases: ['s'],
       },
 
       verbose: {
         type: 'boolean',
-        alias: 'v',
+        aliases: ['v'],
       },
 
       skipEmpty: {
         type: 'boolean',
       },
 
-      /*
-      skipUrl: {
-        type: 'string',
-      },
-
-      overwrite: {
+      quiet: {
         type: 'boolean',
-        alias: 'w',
-      },
-      */
+        aliases: ['q'],
+      }
     },
   },
 )
@@ -73,13 +70,13 @@ loggerConfig.quiet = options.flags.quiet
 
 ;(
   async () => {
-    const { runner } = await import('./runner.mjs');
+    const { runner } = await import('./runner.mjs')
 
-    verboseLog('Initialized with following params:', options.flags)
-    verboseLog('With following inputs:', options.input)
+    verboseLog('Initialization complete with the following parameters:', options.flags)
+    verboseLog('Inputs provided:', options.input)
 
     if (options.input.length === 0) {
-      globalError('No input specified')
+      globalError('No input specified.')
       process.exitCode = 1
 
       return

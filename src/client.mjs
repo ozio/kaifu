@@ -1,46 +1,48 @@
 import chalk from 'chalk'
 import fetch from 'node-fetch'
 import { createLogger, globalError, globalLog } from './logger.mjs'
-import pj from '../package.json' assert { type: 'json' }
+import { getPackageJson } from './utils/getPackageJson.mjs'
 
-const { name, version, homepage } = pj
+const { name, version, homepage } = await getPackageJson()
+
 const userAgent = `${name}/${version} (+${homepage})`
 
 const { verboseLog, verboseError } = createLogger(chalk.magenta('client'))
 
-verboseLog('User-agent will be', chalk.yellow(userAgent))
+verboseLog('User-Agent set to:', chalk.yellow(userAgent))
 
 export const client = async (url) => {
   try {
-    verboseLog(`Request ${url}`)
+    verboseLog(`Sending request to: ${url}`)
 
     const response = await fetch(url, {
       headers: { 'User-Agent': userAgent },
     })
 
-    verboseLog(`Response ${chalk.green(response.status)}, size: ${response.headers['content-length']}`)
+    verboseLog(`Response received: ${chalk.green(response.status)}, Content-Length: ${response.headers['content-length'] || 'unknown'}`)
 
     if (response.status >= 400) {
-      globalError(`Request failed (${response.status})`)
-      throw new Error(`Request failed (${response.status})`)
+      const errorMsg = `Request failed with status code: ${response.status}`
+      globalError(errorMsg)
+      throw new Error(errorMsg)
     }
 
     return response
   } catch (e) {
-    verboseError(`Request failed: ${e.errno}, ${e.response ? e.response.status : e.message}`)
+    verboseError(`Request error: ${e.errno || 'unknown'}, Status: ${e.response ? e.response.status : e.message}`)
 
     if (e.errno === 'DEPTH_ZERO_SELF_SIGNED_CERT') {
-      globalError('The website is using self-signed certificate.')
-      globalLog('You could use environment variable NODE_TLS_REJECT_UNAUTHORIZED=0 as a fast, but very unsecure fix.')
+      globalError('The website is using a self-signed certificate.')
+      globalLog('Consider setting the environment variable NODE_TLS_REJECT_UNAUTHORIZED=0 as a temporary workaround, but note that this is insecure.')
     }
 
     if (e.errno === 'SELF_SIGNED_CERT_IN_CHAIN') {
-      globalError('There is a self-signed certificate in chain.')
-      globalLog('You could use environment variable NODE_TLS_REJECT_UNAUTHORIZED=0 as a fast, but very unsecure fix.')
+      globalError('A self-signed certificate was detected in the certificate chain.')
+      globalLog('Consider setting the environment variable NODE_TLS_REJECT_UNAUTHORIZED=0 as a temporary workaround, but note that this is insecure.')
     }
 
     if (e.errno === 'ENOTFOUND') {
-      globalError('Request failed. Check URL or your internet connection.')
+      globalError('Request failed. Please verify the URL or check your internet connection.')
     }
 
     throw e

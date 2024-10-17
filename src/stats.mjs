@@ -1,7 +1,7 @@
 import { globalLog } from './logger.mjs'
 
 const s = (num) => {
-  if (num === 1) return 's'
+  if (num > 1) return 's'
   return ''
 }
 

@@ -1,29 +1,32 @@
 # Kaifū
 
-Easy-to-use command-line tool to grab and unpack SourceMap files.
+An intuitive command-line tool for downloading and unpacking SourceMap files.
 
 ### Installation
 
-```bash
+```shell
 npm install -g kaifu
 ```
 
 ### Usage
-```text
+```shell
 Usage: kaifu [options...] <url|file|directory>
-   -o,  --output-dir <dir>   Output directory
-   -m,  --merge              Unsafe merge all unboxed trees in one folder
-   -s,  --short              Short summary
-   -v,  --verbose            Make the operation more talkative
-   -q,  --quiet              Make the operation less talkative
-        --skip-empty         Do not unbox empty files
-        --version            Show version number and exit
+
+Options:
+   -o,  --output-dir <dir>   Specify the output directory.
+   -m,  --merge              Unsafely merge all unboxed trees into a single folder.
+   -s,  --short              Display a short summary.
+   -v,  --verbose            Provide detailed output.
+   -q,  --quiet              Suppress most output messages (minimal output).
+        --skip-empty         Skip unboxing of empty files.
+        --version            Show the version number and exit.
    
 Examples:
-   kaifu --output-dir ./mdn https://developer.mozilla.org/
+   kaifu --o ./mdn https://developer.mozilla.org/
+   kaifu -sm https://developer.mozilla.org/
 ```
 ### Preview
-```
+```shell
 $ npx kaifu --merge --output-dir ./ngrok http://6f0f744027c8.ngrok.io
 
 Loading resources:
@@ -70,7 +73,7 @@ Unboxing resources:
 
 ### Short version preview
 
-```
+```shell
 $ kaifu --merge --short --output-dir ./mdn https://developer.mozilla.org/
 
 Loading resources:
@@ -88,6 +91,6 @@ Unboxing resources:
 4 sourcemap files found, 152 files unboxed.
 ```
 
-Kaifū means "unboxing" in Japanese.
+**Note:** _Kaifū_ means "unboxing" in Japanese.
 
 MIT &copy; Nikolay Solovyov

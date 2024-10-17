@@ -1,6 +1,6 @@
 import chalk from 'chalk'
-import pj from '../../package.json' assert { type: 'json' }
+import { getPackageJson } from './getPackageJson.mjs'
 
-const { version } = pj
+const { version } = await getPackageJson()
 
 export const logo = chalk.bold(chalk.yellow(`Kaifū`) + ` v${version}`)

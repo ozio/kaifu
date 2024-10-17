@@ -1,7 +1,7 @@
 import chalk from 'chalk'
-import pj from '../package.json' assert { type: 'json' }
+import { getPackageJson } from './utils/getPackageJson.mjs'
 
-const { name } = pj
+const { name } = await getPackageJson()
 
 export const loggerConfig = {
   verbose: false,

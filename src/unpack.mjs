@@ -16,7 +16,7 @@ export const unboxQueue = new Queue()
 
 const fixSource = (source) => {
   if (source.startsWith('webpack:///')) {
-    verboseLog('Source starts with wrong protocol (webpack:///). Fixing.')
+    verboseLog('Fixing incorrect protocol (webpack:///).')
     return source.slice(11)
   }
 
@@ -50,55 +50,42 @@ const unpackNextFile = async () => {
 export const unpack = async (sourceMapPath, outputDir, input) => {
   const flags = options.flags
   const sourceMap = await readFile(sourceMapPath, 'utf-8')
-  const sourceMapFileName = sourceMapPath.split('/').slice(-1).join('')
+  const sourceMapFileName = path.basename(sourceMapPath)
 
   let length = 0
   let extensions = {}
   let treeString = ''
 
   try {
-    verboseLog(`Start unpacking SourceMap "${sourceMapPath}" (${sourceMap.length} bytes)`)
+    verboseLog(`Unpacking SourceMap "${sourceMapPath}" (${sourceMap.length} bytes)`)
     await SourceMapConsumer.with(sourceMap, null, async (consumer) => {
       length = consumer.sources.length
-      extensions = {}
 
       if (flags.short) {
-        globalLog(` ▸ ${
-          chalk.bold(sourceMapFileName)
-        } → ${
-          outputDir.replace(path.resolve(), '.')
-        }${
-          flags.merge ? '' : `/${sourceMapFileName}${POSTFIX}`
-        } ${chalk.grey(`[${length} file${length > 1 ? 's' : ''}]`)}`)
+        globalLog(` ▸ ${chalk.bold(sourceMapFileName)} → ${outputDir.replace(path.resolve(), '.')}${flags.merge
+          ? ''
+          : `/${sourceMapFileName}${POSTFIX}`} ${chalk.grey(`[${length} file${length > 1 ? 's' : ''}]`)}`)
       } else {
         globalLog()
         globalLog(` 📦 ${chalk.bold(input)}`)
       }
 
       for (const source of consumer.sources) {
-        verboseLog(` ${source}`)
+        verboseLog(`Processing source: ${source}`)
 
-        const onlyFileName = source.split('/').slice(-1).join('')
-        if (onlyFileName.includes('.')) {
-          const ext = onlyFileName.split('.').slice(-1).join('')
-          if (!stats.recoveredFilesExtensions[ext]) stats.recoveredFilesExtensions[ext] = 0
-          stats.recoveredFilesExtensions[ext]++
-          if (!extensions[ext]) extensions[ext] = 0
-          extensions[ext]++
-        } else {
-          if (!stats.recoveredFilesExtensions['Not specified']) stats.recoveredFilesExtensions['Not specified'] = 0
-          stats.recoveredFilesExtensions['Not specified']++
-          if (!extensions['Not specified']) extensions['Not specified'] = 0
-          extensions['Not specified']++
-        }
+        const onlyFileName = path.basename(source)
+        const ext = path.extname(onlyFileName)
+          .slice(1) || 'Not specified'
+
+        stats.recoveredFilesExtensions[ext] = (stats.recoveredFilesExtensions[ext] || 0) + 1
+        extensions[ext] = (extensions[ext] || 0) + 1
 
         let sourceContent = consumer.sourceContentFor(source)
+        sourceContent = flags.skipEmpty ? sourceContent : sourceContent || ''
 
         if (sourceContent) {
-          verboseLog(`Source (${sourceContent.length} bytes)`)
+          verboseLog(`Source content size: ${sourceContent.length} bytes`)
         }
-
-        if (!flags.skipEmpty) sourceContent = sourceContent || ''
 
         const fixedSource = fixSource(source)
         const filePath = path.resolve(outputDir, flags.merge ? '' : `${sourceMapFileName}${POSTFIX}`, fixedSource)
@@ -110,11 +97,11 @@ export const unpack = async (sourceMapPath, outputDir, input) => {
 
         treeString += `${filePath.replace(path.resolve(outputDir), '')}|${sourceContent ? sourceContent.length : 0}\n`
 
-        verboseLog(filePath.replace(path.resolve(outputDir), ''))
+        verboseLog(`File saved: ${filePath.replace(path.resolve(outputDir), '')}`)
       }
     })
   } catch (e) {
-    globalError(`Invalid format. ${e.message}`)
+    globalError(`Failed to unpack. Error: ${e.message}`)
     verboseError(`Error while unpacking "${sourceMapPath}": ${e.message}`)
   }
 
@@ -125,7 +112,7 @@ export const unpack = async (sourceMapPath, outputDir, input) => {
   try {
     await unlink(sourceMapPath)
   } catch (e) {
-    globalLog(e.message)
+    globalLog(`Error removing source map file: ${e.message}`)
   }
 }
 

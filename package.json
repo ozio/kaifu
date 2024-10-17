@@ -1,7 +1,7 @@
 {
   "name": "kaifu",
-  "version": "2.0.1",
-  "description": "Easy-to-use command-line tool to grab and unpack SourceMap files.",
+  "version": "2.1.0",
+  "description": "An intuitive command-line tool for downloading and unpacking SourceMap files.",
   "main": "kaifu.mjs",
   "bin": {
     "kaifu": "kaifu.mjs"
@@ -14,18 +14,22 @@
     "source-map",
     "sourcemap",
     "sourcemaps",
-    "cli",
+    "cli-tool",
     "unpack",
-    "unboxing"
+    "unbox",
+    "source-map-downloader",
+    "source-map-extractor",
+    "developer-tooling",
+    "javascript-tools"
   ],
   "author": "Nikolay Solovyov <i@mr-ozio.ru>",
   "license": "MIT",
   "homepage": "https://github.com/ozio/kaifu",
   "dependencies": {
-    "chalk": "5.2.0",
-    "meow": "11.0.0",
-    "node-fetch": "3.3.0",
-    "node-html-parser": "6.1.4",
+    "chalk": "5.3.0",
+    "meow": "13.2.0",
+    "node-fetch": "3.3.2",
+    "node-html-parser": "6.1.13",
     "source-map": "0.7.4"
   },
   "engines": {
