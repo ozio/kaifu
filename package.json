@@ -39,6 +39,6 @@
     "strip-ansi": "7.1.0"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   }
 }
