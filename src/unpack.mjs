@@ -47,7 +47,7 @@ const unpackNextFile = async () => {
   eventEmitter.emit('unpack-record-processed')
 }
 
-export const unpack = async (sourceMapPath, outputDir, input) => {
+export const unpack = async (sourceMapPath, outputDir, input, noUnlink) => {
   const flags = options.flags
   const sourceMap = await readFile(sourceMapPath, 'utf-8')
   const sourceMapFileName = path.basename(sourceMapPath)
@@ -66,22 +66,26 @@ export const unpack = async (sourceMapPath, outputDir, input) => {
           ? ''
           : `/${sourceMapFileName}${POSTFIX}`} ${chalk.grey(`[${length} file${length > 1 ? 's' : ''}]`)}`)
       } else {
-        globalLog()
-        globalLog(` 📦 ${chalk.bold(input)}`)
+        //globalLog()
+        globalLog(` 📦 ${chalk.bold(input || sourceMapPath)}`)
       }
 
       for (const source of consumer.sources) {
         verboseLog(`Processing source: ${source}`)
 
         const onlyFileName = path.basename(source)
-        const ext = path.extname(onlyFileName)
-          .slice(1) || 'Not specified'
+        const ext = path.extname(onlyFileName).slice(1) || 'Not specified'
 
         stats.recoveredFilesExtensions[ext] = (stats.recoveredFilesExtensions[ext] || 0) + 1
         extensions[ext] = (extensions[ext] || 0) + 1
 
         let sourceContent = consumer.sourceContentFor(source)
-        sourceContent = flags.skipEmpty ? sourceContent : sourceContent || ''
+        sourceContent = sourceContent || ''
+
+        if (flags.skipEmpty && !sourceContent) {
+          verboseLog(`Skipping empty file: ${source}`)
+          continue
+        }
 
         if (sourceContent) {
           verboseLog(`Source content size: ${sourceContent.length} bytes`)
@@ -109,10 +113,14 @@ export const unpack = async (sourceMapPath, outputDir, input) => {
     globalLog(tree(treeString))
   }
 
-  try {
-    await unlink(sourceMapPath)
-  } catch (e) {
-    globalLog(`Error removing source map file: ${e.message}`)
+  if (noUnlink) {
+    verboseLog('Skipping source map file removal.')
+  } else {
+    try {
+      await unlink(sourceMapPath)
+    } catch (e) {
+      globalLog(`Error removing source map file: ${e.message}`)
+    }
   }
 }
 

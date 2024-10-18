@@ -2,7 +2,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import { access, readdir, readFile } from 'node:fs/promises'
 import chalk from 'chalk'
-import { createLogger, globalLog } from './logger.mjs'
+import { createLogger, globalError, globalLog } from './logger.mjs'
 import { options } from './options.mjs'
 import { stats } from './stats.mjs'
 import { crawler } from './crawler.mjs'
@@ -38,7 +38,8 @@ export const runner = async (input) => {
     verboseLog('Directory or file already exists, but proceeding due to --overwrite flag')
   } catch (e) {
     if (e.code !== 'ENOENT') {
-      globalLog(`Error accessing output directory: ${e.message}`)
+      globalError(`Error accessing output directory: ${e.message}`)
+      process.exitCode = 1
       return
     }
   }
@@ -46,7 +47,7 @@ export const runner = async (input) => {
   switch (inputType) {
     case 'local-sourcemap':
       verboseLog(`Processing local sourcemap input: "${input}"`)
-      await unpack(input, outputDir)
+      await unpack(input, outputDir, undefined, true)
       break
 
     case 'directory':
@@ -55,7 +56,7 @@ export const runner = async (input) => {
       for await (const file of files) {
         if (file.endsWith('.map')) {
           verboseLog(`Unpacking file: ${file}`)
-          await unpack(path.resolve(input, file), outputDir)
+          await unpack(path.resolve(input, file), outputDir, undefined, true)
         } else {
           verboseLog(`Skipping file: ${file} (not a SourceMap)`)
         }

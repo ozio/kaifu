@@ -1,0 +1,36 @@
+name: Run Mocha Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node: [16, 18, 22]
+
+    steps:
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Set up Node.js environment
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: npm ci
+
+      # Run tests
+      - name: Run Mocha Tests
+        run: npm test

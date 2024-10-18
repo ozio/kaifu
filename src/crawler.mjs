@@ -73,19 +73,14 @@ const downloadAndProcess = async (record) => {
     let filename = `sourcemap.${generateRandomString()}.map`
 
     try {
-      filename = url.pathname.split('/')
-        .pop()
-    } catch (e) {
-    }
+      filename = url.pathname.split('/').pop()
+    } catch (e) {}
 
     try {
       await access(path.resolve(outputDir, filename), fs.F_OK)
       const parts = filename.split('.')
-      filename = `${parts.slice(0, -2)
-        .join('.')}.${generateRandomString()}.${parts.slice(-2)
-        .join('.')}`
-    } catch (e) {
-    }
+      filename = `${parts.slice(0, -2).join('.')}.${generateRandomString()}.${parts.slice(-2).join('.')}`
+    } catch (e) {}
 
     verboseLog(`Generated filename: ${filename}`)
 
@@ -113,10 +108,8 @@ const downloadAndProcess = async (record) => {
       const newInput = resolveURL(input, resource)
       const inputType = detectInputURLType(newInput)
 
-      if (newInput.startsWith('http:') || newInput.startsWith('https:')) {
-        if (inputType !== 'skip') {
-          downloadQueue.add({ input: newInput, inputType, outputDir })
-        }
+      if ((newInput.startsWith('http:') || newInput.startsWith('https:')) && inputType !== 'skip') {
+        downloadQueue.add({ input: newInput, inputType, outputDir })
       }
     })
 
