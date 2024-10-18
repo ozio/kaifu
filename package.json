@@ -8,7 +8,7 @@
   },
   "preferGlobal": true,
   "scripts": {
-    "test": "mocha"
+    "test": "mocha tests"
   },
   "keywords": [
     "source-map",
