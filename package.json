@@ -8,7 +8,7 @@
   },
   "preferGlobal": true,
   "scripts": {
-    "test": "mocha"
+    "test": "mocha tests"
   },
   "keywords": [
     "source-map",
@@ -39,6 +39,6 @@
     "strip-ansi": "7.1.0"
   },
   "engines": {
-    "node": ">=16"
+    "node": ">=18"
   }
 }
